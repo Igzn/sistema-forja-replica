@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useState } from "react";
+import { useNotifications } from "@/contexts/NotificationContext";
 import {
   BarChart3,
   CheckSquare,
@@ -13,11 +14,76 @@ import {
   Trophy,
   Shield,
   Medal,
-  ChevronDown,
+  Bell,
+  Trash2,
+  CheckCheck,
 } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
+}
+
+/* ── Notification Panel ── */
+function NotificationPanel({ onClose }: { onClose: () => void }) {
+  const { notifications, markAsRead, markAllAsRead, clearAll } = useNotifications();
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Bell className="w-5 h-5 text-blue-400" />
+            </div>
+            <h2 className="text-lg font-bold">Notificações</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={markAllAsRead} className="p-2 hover:bg-[#2a2a2a] rounded-lg transition" title="Marcar todas como lidas">
+              <CheckCheck className="w-4 h-4 text-gray-400" />
+            </button>
+            <button onClick={clearAll} className="p-2 hover:bg-[#2a2a2a] rounded-lg transition" title="Limpar todas">
+              <Trash2 className="w-4 h-4 text-gray-400" />
+            </button>
+            <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+
+        {notifications.length === 0 ? (
+          <div className="text-center py-12">
+            <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">Nenhuma notificação</p>
+            <p className="text-gray-500 text-sm mt-1">Suas notificações aparecerão aqui</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {notifications.map(n => (
+              <button
+                key={n.id}
+                onClick={() => markAsRead(n.id)}
+                className={`w-full text-left bg-[#111] rounded-xl p-4 border transition hover:bg-[#1a1a1a] ${
+                  n.read ? 'border-[#2a2a2a] opacity-60' : 'border-[#333]'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-xl shrink-0 mt-0.5">{n.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className={`font-bold text-sm ${n.color}`}>{n.title}</span>
+                      {!n.read && <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>}
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">{n.message}</p>
+                    <p className="text-[10px] text-gray-600 mt-1">
+                      {new Date(n.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /* ── XP Stats Popup ── */
@@ -107,7 +173,7 @@ function CoinsPopup({ onClose }: { onClose: () => void }) {
             <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center">
               <span className="text-xl">💰</span>
             </div>
-            <h2 className="text-lg font-bold">Forja Coins</h2>
+            <h2 className="text-lg font-bold">Life Coins</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
         </div>
@@ -130,7 +196,7 @@ function CoinsPopup({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div className="bg-[#2a2a2a] rounded-xl p-4 mb-4">
-          <p className="text-sm text-gray-400">Você ganha 20% do XP em Forja Coins para gastar na loja!</p>
+          <p className="text-sm text-gray-400">Você ganha 20% do XP em Life Coins para gastar na loja!</p>
         </div>
         <div className="bg-[#2a2a2a] rounded-xl p-6 text-center">
           <span className="text-3xl mb-2 block">💰</span>
@@ -236,6 +302,7 @@ function AchievementsPopup({ onClose }: { onClose: () => void }) {
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
   const [popup, setPopup] = useState<string | null>(null);
+  const { unreadCount } = useNotifications();
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: BarChart3 },
@@ -254,7 +321,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           </div>
-          <span className="text-sm font-medium text-gray-300">sistemaforja.com</span>
+          <span className="text-sm font-medium text-gray-300">sistemalife.com</span>
         </div>
         <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,6 +341,15 @@ export default function Layout({ children }: LayoutProps) {
           <span className="text-sm font-bold text-yellow-400">1</span>
         </button>
         <div className="flex items-center gap-2 ml-auto">
+          {/* Notification Bell */}
+          <button onClick={() => setPopup('notifications')} className="relative w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+            <Bell className="w-4 h-4 text-gray-400" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
           <button onClick={() => setPopup('titles')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
             <Shield className="w-4 h-4 text-purple-400" />
           </button>
@@ -319,6 +395,7 @@ export default function Layout({ children }: LayoutProps) {
       {popup === 'coins' && <CoinsPopup onClose={() => setPopup(null)} />}
       {popup === 'titles' && <TitlesPopup onClose={() => setPopup(null)} />}
       {popup === 'achievements' && <AchievementsPopup onClose={() => setPopup(null)} />}
+      {popup === 'notifications' && <NotificationPanel onClose={() => setPopup(null)} />}
     </div>
   );
 }

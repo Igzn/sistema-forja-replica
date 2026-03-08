@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Plus, Clock, Play, Pause, RotateCcw, Maximize, Minus, ChevronDown, ChevronUp, Settings, FolderOpen, X, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -21,19 +23,20 @@ interface Session {
 const projectColors = ["#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316"];
 
 export default function Focus() {
-  const [focusTime, setFocusTime] = useState(25);
-  const [breakTime, setBreakTime] = useState(5);
+  const { addNotification } = useNotifications();
+  const [focusTime, setFocusTime] = useLocalStorage<number>("life-focus-time", 25);
+  const [breakTime, setBreakTime] = useLocalStorage<number>("life-break-time", 5);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isFocus, setIsFocus] = useState(true);
-  const [metaHours, setMetaHours] = useState(40);
+  const [metaHours, setMetaHours] = useLocalStorage<number>("life-meta-hours", 40);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [projects, setProjects] = useLocalStorage<Project[]>("life-focus-projects", []);
+  const [sessions, setSessions] = useLocalStorage<Session[]>("life-focus-sessions", []);
+  const [selectedProject, setSelectedProject] = useLocalStorage<string | null>("life-focus-selected-project", null);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectColor, setNewProjectColor] = useState("#EF4444");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -60,6 +63,7 @@ export default function Focus() {
                 setProjects(prev => prev.map(p => p.id === selectedProject ? { ...p, totalMinutes: p.totalMinutes + sessionDuration } : p));
               }
               toast.success(`Sessão de foco concluída! ${sessionDuration}min 🎉`);
+              addNotification({ type: 'focus', title: 'Sessão Concluída!', message: `${sessionDuration}min de foco em "${projName}". Hora da pausa!`, icon: '⏰', color: 'text-blue-400' });
               setIsFocus(false);
               return breakTime * 60;
             } else {
@@ -122,6 +126,7 @@ export default function Focus() {
     setShowProjectModal(false);
     setNewProjectName("");
     toast.success(`Projeto "${newProjectName}" criado!`);
+    addNotification({ type: 'focus', title: 'Novo Projeto de Foco!', message: `Projeto "${newProjectName}" criado. Selecione-o para começar a focar!`, icon: '📁', color: 'text-blue-400' });
   };
 
   const deleteProject = (id: string) => {

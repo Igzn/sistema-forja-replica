@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import Dashboard from "./pages/Dashboard";
 import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
@@ -22,7 +23,6 @@ function Router() {
       <Route path={"/finance"} component={Finance} />
       <Route path={"/focus"} component={Focus} />
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -32,10 +32,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <NotificationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

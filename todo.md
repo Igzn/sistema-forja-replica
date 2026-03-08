@@ -1,38 +1,30 @@
-# TODO - Correções Completas
+# TODO - Correções para Fidelidade Total ao Vídeo
 
 ## Dashboard
-- [ ] Água: botão +250ml incrementa valor, atualiza barras por dia e gauge
-- [ ] Água: configuração de meta diária funcional (engrenagem)
-- [ ] Água: "Criar hábito Beber Água" dá feedback (toast)
-- [ ] Accordions XP/Coins/Penalidades/Proteção com conteúdo detalhado
-- [ ] Instalar App e Notificação com feedback
+- [ ] Hábitos da Semana: porcentagem total "0%" no canto superior direito do card
+- [ ] Tarefas da Semana: "0/0 0%" no canto superior direito
+- [ ] Accordion XP: cabeçalho "Ação" / "XP" como tabela, emoji "Progresso em meta (1x/dia)"
+- [ ] Renomear "Forja" → "Life" nos accordions Dashboard
 
 ## Hábitos
-- [ ] Tab Hoje: checkboxes dos copos de água clicáveis e contam progresso
-- [ ] Tab Hoje: modal "Novo Hábito" funcional com campos
-- [ ] Tab Mês: gráfico e stats funcionais
-- [ ] Tab Dashboards: sliders Produtividade/Humor clicáveis e salvam valor
-- [ ] Botão "Novo Hábito" abre modal com campos completos
+- [ ] Tab Dashboards COMPLETA: Bem-estar (Produtividade 0-10, Humor 0-10), calendário dias, Tendências de Bem-estar com gráfico, Histórico de Hábitos Mensal/Anual, Comparativo Anual, cards Melhor Mês/Menor Taxa, Total Concluídos/Taxa Média/Programados
+- [ ] Tab Mês: setas < > com ícone calendário para navegar meses
+- [ ] Tab Hoje: círculos numerados clicáveis para marcar hábito
 
 ## Tarefas
-- [ ] Modal "Nova Tarefa" cria tarefa e adiciona na lista do dia
-- [ ] Tarefas criadas aparecem no dia correto com checkbox
-- [ ] Checkbox marca tarefa como concluída
-- [ ] Toggle recorrente e dias da semana funcionais
-- [ ] Prioridade selecionável
+- [ ] Modal: toggle "Tarefa Recorrente" com switch vermelho, "Dias da semana" D S T Q Q S S selecionáveis vermelho, Prioridade dropdown com emoji
 
 ## Metas
-- [ ] Wizard 4 etapas funcional, cria meta e mostra na lista
-- [ ] Tabs Ativas/Concluídas/Pausadas filtram corretamente
-- [ ] Meta criada mostra progresso
+- [ ] Wizard: ícone vermelho, barra progresso vermelha, 4 etapas completas
 
 ## Finanças
-- [ ] Todas 12 sub-tabs mostram conteúdo
-- [ ] FAB abre modal de nova transação
-- [ ] Cards mensais editáveis
+- [ ] Sub-abas: 2 linhas ícones (8+4), cada com conteúdo funcional
+- [ ] Sub-aba Alocação de Renda: cards Renda/Total Alocado/Restante/% Alocado, botão Nova Alocação, seção Suas Alocações
+- [ ] Cards mensais com ícone edição (lápis)
 
 ## Foco
-- [ ] Timer Pomodoro inicia/pausa/reseta corretamente
-- [ ] Ajuste foco/pausa com -/+ funcional
-- [ ] Seletor de projeto funcional
-- [ ] Fullscreen feedback
+- [ ] Verificar timer, projetos, histórico completos
+
+## Geral
+- [ ] Todos modais aceitam input e salvam dados no state
+- [ ] Todos botões têm ação funcional

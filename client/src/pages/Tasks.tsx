@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Plus, ChevronLeft, ChevronRight, Calendar, X, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +23,7 @@ const priorityColors: Record<string, { bg: string; text: string; dot: string }> 
 };
 
 export default function Tasks() {
+  const { addNotification } = useNotifications();
   const [showModal, setShowModal] = useState(false);
   const [targetDay, setTargetDay] = useState(0);
   const [recurrent, setRecurrent] = useState(false);
@@ -28,7 +31,7 @@ export default function Tasks() {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPriority, setNewPriority] = useState("Média");
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useLocalStorage<Task[]>("life-tasks", []);
   const [activeTab, setActiveTab] = useState("hoje");
 
   const days = [
@@ -58,6 +61,7 @@ export default function Tasks() {
         setTasks(prev => [...prev, task]);
       });
       toast.success(`Tarefa recorrente "${newTitle}" criada para ${selectedDays.length} dias!`);
+      addNotification({ type: 'task', title: 'Tarefa Recorrente Criada!', message: `"${newTitle}" foi agendada para ${selectedDays.length} dias da semana.`, icon: '📋', color: 'text-cyan-400' });
     } else {
       const task: Task = {
         id: Date.now().toString(),
@@ -66,6 +70,7 @@ export default function Tasks() {
       };
       setTasks(prev => [...prev, task]);
       toast.success(`Tarefa "${newTitle}" criada para ${days[targetDay].day}!`);
+      addNotification({ type: 'task', title: 'Nova Tarefa Criada!', message: `"${newTitle}" agendada para ${days[targetDay].day}.`, icon: '✅', color: 'text-cyan-400' });
     }
     setShowModal(false);
     setNewTitle(""); setNewDesc(""); setNewPriority("Média"); setRecurrent(false);
@@ -75,7 +80,10 @@ export default function Tasks() {
     setTasks(prev => prev.map(t => {
       if (t.id === taskId) {
         const newCompleted = !t.completed;
-        if (newCompleted) toast.success("Tarefa concluída! +10 XP 🎉");
+        if (newCompleted) {
+          toast.success("Tarefa concluída! +10 XP 🎉");
+          addNotification({ type: 'task', title: 'Tarefa Concluída!', message: `"${t.title}" foi concluída! +10 XP ganhos.`, icon: '✅', color: 'text-green-400' });
+        }
         return { ...t, completed: newCompleted };
       }
       return t;

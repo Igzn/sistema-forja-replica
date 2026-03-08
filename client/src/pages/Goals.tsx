@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Plus, Target, X, ChevronRight, Trash2, Trophy, Pause } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,10 +25,11 @@ const categories = [
 ];
 
 export default function Goals() {
+  const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState("ativas");
   const [showModal, setShowModal] = useState(false);
   const [step, setStep] = useState(1);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useLocalStorage<Goal[]>("life-goals", []);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newCategory, setNewCategory] = useState("Saúde");
@@ -60,6 +63,7 @@ export default function Goals() {
     setGoals(prev => [...prev, goal]);
     setShowModal(false);
     toast.success(`Meta "${newTitle}" criada com sucesso!`);
+    addNotification({ type: 'goal', title: 'Nova Meta Criada!', message: `"${newTitle}" foi adicionada às suas metas. Prazo: ${newDeadline} dias.`, icon: '🎯', color: 'text-purple-400' });
   };
 
   const updateProgress = (goalId: string, delta: number) => {
@@ -68,6 +72,7 @@ export default function Goals() {
         const newProgress = Math.min(100, Math.max(0, g.progress + delta));
         if (newProgress >= 100 && g.progress < 100) {
           toast.success(`Meta "${g.title}" concluída! +100 XP 🎉`);
+          addNotification({ type: 'goal', title: 'Meta Concluída!', message: `Parabéns! "${g.title}" foi concluída! +100 XP e +20 Coins ganhos!`, icon: '🏆', color: 'text-yellow-400' });
           return { ...g, progress: 100, status: "completed" as const };
         }
         return { ...g, progress: newProgress };

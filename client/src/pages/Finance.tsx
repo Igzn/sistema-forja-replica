@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Plus, Wallet, BarChart3, CreditCard, Calendar, ShoppingCart, Landmark, Tag, Sliders, Monitor, FileText, ArrowLeftRight, Clock, PiggyBank, Pencil, Target, X, TrendingUp, TrendingDown } from "lucide-react";
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -39,9 +41,10 @@ const subTabs = [
 const expenseCategories = ["Alimentação", "Transporte", "Moradia", "Lazer", "Saúde", "Educação", "Roupas", "Outros"];
 
 export default function Finance() {
+  const { addNotification } = useNotifications();
   const [activeSubTab, setActiveSubTab] = useState("calendar");
   const [showModal, setShowModal] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useLocalStorage<Transaction[]>("life-transactions", []);
   const [newTitle, setNewTitle] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newType, setNewType] = useState<"income" | "expense">("expense");
@@ -63,6 +66,7 @@ export default function Finance() {
     setShowModal(false);
     setNewTitle(""); setNewAmount(""); setNewType("expense"); setNewCategory("Alimentação");
     toast.success(`${newType === "income" ? "Receita" : "Despesa"} "${newTitle}" adicionada!`);
+    addNotification({ type: 'finance', title: newType === 'income' ? 'Receita Registrada!' : 'Despesa Registrada!', message: `"${newTitle}" - R$ ${parseFloat(newAmount).toFixed(2)}`, icon: newType === 'income' ? '💰' : '💸', color: newType === 'income' ? 'text-green-400' : 'text-red-400' });
   };
 
   const deleteTransaction = (id: string) => {

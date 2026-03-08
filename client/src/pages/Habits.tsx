@@ -1,4 +1,6 @@
 import Layout from "@/components/Layout";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Plus, ChevronLeft, ChevronRight, Calendar, LayoutGrid, TrendingUp, X } from "lucide-react";
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -16,9 +18,10 @@ interface Habit {
 }
 
 export default function Habits() {
+  const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState("hoje");
   const [showModal, setShowModal] = useState(false);
-  const [habits, setHabits] = useState<Habit[]>([
+  const [habits, setHabits] = useLocalStorage<Habit[]>("life-habits", [
     { id: "1", name: "Beber Água", icon: "💧", frequency: "Diário", target: 8, progress: 0 },
   ]);
   const [newHabitName, setNewHabitName] = useState("");
@@ -34,6 +37,7 @@ export default function Habits() {
         const newProgress = index < h.progress ? index : index + 1;
         if (newProgress === h.target) {
           toast.success(`${h.name} concluído! +10 XP 🎉`);
+          addNotification({ type: 'habit', title: `${h.name} Concluído!`, message: `Você completou o hábito "${h.name}" hoje! +10 XP ganhos.`, icon: h.icon, color: 'text-green-400' });
         }
         return { ...h, progress: newProgress };
       }
@@ -60,6 +64,7 @@ export default function Habits() {
     setNewHabitIcon("💪");
     setNewHabitTarget(1);
     toast.success(`Hábito "${newHabitName}" criado com sucesso!`);
+    addNotification({ type: 'habit', title: 'Novo Hábito Criado!', message: `O hábito "${newHabitName}" foi adicionado à sua rotina.`, icon: newHabitIcon, color: 'text-orange-400' });
   };
 
   const totalDone = habits.reduce((acc, h) => acc + (h.progress >= h.target ? 1 : 0), 0);

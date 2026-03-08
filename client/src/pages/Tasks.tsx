@@ -1,26 +1,44 @@
 import Layout from "@/components/Layout";
 import { useNotifications } from "@/contexts/NotificationContext";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { trpc } from "@/lib/trpc";
 import { Plus, ChevronLeft, ChevronRight, Calendar, X, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: string;
-  completed: boolean;
-  dayIndex: number;
-  recurrent: boolean;
-  days: number[];
-}
-
 const priorityColors: Record<string, { bg: string; text: string; dot: string }> = {
-  "Alta": { bg: "bg-red-500/10 border-red-500/30", text: "text-red-400", dot: "bg-red-500" },
-  "Média": { bg: "bg-yellow-500/10 border-yellow-500/30", text: "text-yellow-400", dot: "bg-yellow-500" },
-  "Baixa": { bg: "bg-green-500/10 border-green-500/30", text: "text-green-400", dot: "bg-green-500" },
+  "high": { bg: "bg-red-500/10 border-red-500/30", text: "text-red-400", dot: "bg-red-500" },
+  "medium": { bg: "bg-yellow-500/10 border-yellow-500/30", text: "text-yellow-400", dot: "bg-yellow-500" },
+  "low": { bg: "bg-green-500/10 border-green-500/30", text: "text-green-400", dot: "bg-green-500" },
+  "urgent": { bg: "bg-purple-500/10 border-purple-500/30", text: "text-purple-400", dot: "bg-purple-500" },
 };
+
+const priorityLabels: Record<string, string> = {
+  "high": "Alta",
+  "medium": "Média",
+  "low": "Baixa",
+  "urgent": "Urgente",
+};
+
+function getWeekDates() {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - dayOfWeek);
+  const dates: { date: number; day: string; month: string; dateStr: string; dayOfWeek: number }[] = [];
+  const dayNames = ["Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", "Quinta-Feira", "Sexta-Feira", "Sábado"];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday);
+    d.setDate(sunday.getDate() + i);
+    dates.push({
+      date: d.getDate(),
+      day: dayNames[i],
+      month: d.toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+      dateStr: d.toISOString().split('T')[0],
+      dayOfWeek: i,
+    });
+  }
+  return dates;
+}
 
 export default function Tasks() {
   const { addNotification } = useNotifications();
@@ -30,20 +48,49 @@ export default function Tasks() {
   const [selectedDays, setSelectedDays] = useState([1, 2, 3, 4, 5]);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newPriority, setNewPriority] = useState("Média");
-  const [tasks, setTasks] = useLocalStorage<Task[]>("life-tasks", []);
+  const [newPriority, setNewPriority] = useState<"low" | "medium" | "high" | "urgent">("medium");
+  const [newTime, setNewTime] = useState("");
   const [activeTab, setActiveTab] = useState("hoje");
 
-  const days = [
-    { date: 8, day: "Domingo", month: "Março" },
-    { date: 9, day: "Segunda-Feira", month: "Março" },
-    { date: 10, day: "Terça-Feira", month: "Março" },
-    { date: 11, day: "Quarta-Feira", month: "Março" },
-    { date: 12, day: "Quinta-Feira", month: "Março" },
-    { date: 13, day: "Sexta-Feira", month: "Março" },
-    { date: 14, day: "Sábado", month: "Março" },
-  ];
+  const days = useMemo(() => getWeekDates(), []);
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const weekDayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+  // Backend queries
+  const tasksQuery = trpc.tasks.list.useQuery({
+    startDate: days[0].dateStr,
+    endDate: days[6].dateStr,
+  });
+
+  // Mutations
+  const createTaskMut = trpc.tasks.create.useMutation({
+    onSuccess: () => {
+      tasksQuery.refetch();
+      toast.success(`Tarefa "${newTitle}" criada!`);
+      addNotification({ type: 'task', title: 'Nova Tarefa!', message: `A tarefa "${newTitle}" foi criada.`, icon: '📋', color: 'text-cyan-400' });
+      setShowModal(false);
+      setNewTitle("");
+      setNewDesc("");
+      setNewPriority("medium");
+      setNewTime("");
+      setRecurrent(false);
+    },
+  });
+
+  const updateTaskMut = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      tasksQuery.refetch();
+    },
+  });
+
+  const deleteTaskMut = trpc.tasks.delete.useMutation({
+    onSuccess: () => {
+      tasksQuery.refetch();
+      toast.success("Tarefa removida!");
+    },
+  });
+
+  const tasks = tasksQuery.data ?? [];
 
   const toggleDay = (i: number) => {
     setSelectedDays(prev => prev.includes(i) ? prev.filter(d => d !== i) : [...prev, i]);
@@ -53,50 +100,39 @@ export default function Tasks() {
     if (!newTitle.trim()) { toast.error("Digite o título da tarefa"); return; }
     if (recurrent) {
       selectedDays.forEach(dayIdx => {
-        const task: Task = {
-          id: Date.now().toString() + dayIdx,
-          title: newTitle, description: newDesc, priority: newPriority,
-          completed: false, dayIndex: dayIdx, recurrent: true, days: selectedDays,
-        };
-        setTasks(prev => [...prev, task]);
+        createTaskMut.mutate({
+          title: newTitle,
+          description: newDesc || undefined,
+          date: days[dayIdx].dateStr,
+          time: newTime || undefined,
+          priority: newPriority,
+          isRecurring: true,
+          recurringDays: selectedDays,
+          xpReward: 10,
+        });
       });
-      toast.success(`Tarefa recorrente "${newTitle}" criada para ${selectedDays.length} dias!`);
-      addNotification({ type: 'task', title: 'Tarefa Recorrente Criada!', message: `"${newTitle}" foi agendada para ${selectedDays.length} dias da semana.`, icon: '📋', color: 'text-cyan-400' });
     } else {
-      const task: Task = {
-        id: Date.now().toString(),
-        title: newTitle, description: newDesc, priority: newPriority,
-        completed: false, dayIndex: targetDay, recurrent: false, days: [],
-      };
-      setTasks(prev => [...prev, task]);
-      toast.success(`Tarefa "${newTitle}" criada para ${days[targetDay].day}!`);
-      addNotification({ type: 'task', title: 'Nova Tarefa Criada!', message: `"${newTitle}" agendada para ${days[targetDay].day}.`, icon: '✅', color: 'text-cyan-400' });
+      createTaskMut.mutate({
+        title: newTitle,
+        description: newDesc || undefined,
+        date: days[targetDay].dateStr,
+        time: newTime || undefined,
+        priority: newPriority,
+        isRecurring: false,
+        xpReward: 10,
+      });
     }
-    setShowModal(false);
-    setNewTitle(""); setNewDesc(""); setNewPriority("Média"); setRecurrent(false);
   };
 
-  const toggleTask = (taskId: string) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        const newCompleted = !t.completed;
-        if (newCompleted) {
-          toast.success("Tarefa concluída! +10 XP 🎉");
-          addNotification({ type: 'task', title: 'Tarefa Concluída!', message: `"${t.title}" foi concluída! +10 XP ganhos.`, icon: '✅', color: 'text-green-400' });
-        }
-        return { ...t, completed: newCompleted };
-      }
-      return t;
-    }));
+  const toggleComplete = (taskId: number, currentState: boolean) => {
+    updateTaskMut.mutate({ id: taskId, isCompleted: !currentState });
+    if (!currentState) {
+      toast.success("Tarefa concluída! +10 XP 🎉");
+      addNotification({ type: 'task', title: 'Tarefa Concluída!', message: 'Você completou uma tarefa. +10 XP ganhos!', icon: '✅', color: 'text-green-400' });
+    }
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-    toast.info("Tarefa removida");
-  };
-
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.completed).length;
+  const todayDayIndex = new Date().getDay();
 
   return (
     <Layout>
@@ -104,106 +140,89 @@ export default function Tasks() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
               <Calendar className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Tarefas</h1>
-              <p className="text-sm text-gray-400">{completedTasks}/{totalTasks} concluídas</p>
+              <p className="text-sm text-gray-400">{tasks.filter((t: any) => t.isCompleted).length}/{tasks.length} concluídas</p>
             </div>
           </div>
-          <button onClick={() => { setShowModal(true); setTargetDay(0); }} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-xl flex items-center gap-2 transition text-sm">
+          <button onClick={() => { setTargetDay(todayDayIndex); setShowModal(true); }} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 px-5 rounded-xl flex items-center gap-2 transition text-sm">
             <Plus className="w-4 h-4" />
             Nova Tarefa
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] p-1.5 rounded-xl flex gap-1">
-          <button onClick={() => setActiveTab("hoje")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'hoje' ? 'bg-[#2a2a2a] text-white' : 'text-gray-400 hover:text-gray-300'}`}>
-            <Calendar className="w-4 h-4" /> Hoje
-          </button>
-          <button onClick={() => setActiveTab("mes")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'mes' ? 'bg-red-500 text-white' : 'text-gray-400 hover:text-gray-300'}`}>
-            <Calendar className="w-4 h-4" /> Mês
-          </button>
-          <button onClick={() => setActiveTab("alertas")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'alertas' ? 'bg-red-500 text-white' : 'text-gray-400 hover:text-gray-300'}`}>
-            <AlertTriangle className="w-4 h-4" /> Alertas
-          </button>
-        </div>
-
-        {/* Week Navigation */}
-        <div className="flex items-center justify-between">
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronLeft className="w-5 h-5" /></button>
-          <p className="text-gray-400 font-medium">Semana 11 · Março</p>
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronRight className="w-5 h-5" /></button>
-        </div>
-
-        {/* Tab Hoje - Task Days */}
-        {activeTab === "hoje" && (
-          <div className="space-y-3">
-            {days.map((day, dayIdx) => {
-              const dayTasks = tasks.filter(t => t.dayIndex === dayIdx);
+        {/* Week Header */}
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
+          <div className="flex items-center justify-between mb-3">
+            <button className="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronLeft className="w-4 h-4" /></button>
+            <span className="text-sm font-bold">{days[0].month} {new Date().getFullYear()}</span>
+            <button className="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronRight className="w-4 h-4" /></button>
+          </div>
+          <div className="flex justify-between">
+            {days.map((d, i) => {
+              const dayTasks = tasks.filter((t: any) => t.date === d.dateStr);
+              const isToday = d.dateStr === todayStr;
               return (
-                <div key={day.date} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-2xl font-bold">{day.date}</h3>
-                      <p className="text-sm text-gray-400">{day.day}</p>
-                    </div>
-                    <button onClick={() => { setShowModal(true); setTargetDay(dayIdx); }} className="text-red-500 hover:text-red-400 transition">
-                      <Plus className="w-6 h-6" />
-                    </button>
-                  </div>
-                  {dayTasks.length > 0 ? (
-                    <div className="space-y-2">
-                      {dayTasks.map(task => {
-                        const prio = priorityColors[task.priority] || priorityColors["Média"];
-                        return (
-                          <div key={task.id} className={`flex items-center gap-3 p-3 rounded-xl border ${task.completed ? 'bg-green-500/5 border-green-500/20' : `${prio.bg}`} transition`}>
-                            <button onClick={() => toggleTask(task.id)}
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition ${
-                                task.completed ? 'bg-green-500 border-green-500' : 'border-gray-500 hover:border-red-500'
-                              }`}>
-                              {task.completed && <span className="text-white text-xs">✓</span>}
-                            </button>
-                            <div className="flex-1">
-                              <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>{task.title}</p>
-                              {task.description && <p className="text-xs text-gray-500">{task.description}</p>}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${prio.dot}`}></span>
-                              <button onClick={() => deleteTask(task.id)} className="text-gray-500 hover:text-red-400 transition text-xs">✕</button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-center text-gray-600 py-4 text-sm">Nenhuma tarefa para este dia</p>
-                  )}
-                </div>
+                <button key={i} onClick={() => setTargetDay(i)}
+                  className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition ${
+                    isToday ? 'bg-cyan-500/20 border border-cyan-500/30' : targetDay === i ? 'bg-[#2a2a2a]' : 'hover:bg-[#2a2a2a]'
+                  }`}>
+                  <span className={`text-[10px] ${isToday ? 'text-cyan-400 font-bold' : 'text-gray-500'}`}>{weekDayLabels[i]}</span>
+                  <span className={`text-sm font-bold ${isToday ? 'text-cyan-400' : 'text-white'}`}>{d.date}</span>
+                  {dayTasks.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>}
+                </button>
               );
             })}
           </div>
-        )}
+        </div>
 
-        {/* Tab Mês */}
-        {activeTab === "mes" && (
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 text-center">
-            <Calendar className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-            <p className="text-gray-400">Visão mensal das tarefas</p>
-            <p className="text-sm text-gray-500 mt-2">{totalTasks} tarefas criadas · {completedTasks} concluídas</p>
-          </div>
-        )}
-
-        {/* Tab Alertas */}
-        {activeTab === "alertas" && (
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 text-center">
-            <AlertTriangle className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-            <p className="text-gray-400">Nenhum alerta pendente</p>
-            <p className="text-sm text-gray-500 mt-2">Alertas de tarefas atrasadas aparecerão aqui</p>
-          </div>
-        )}
+        {/* Day Tasks */}
+        <div>
+          <h2 className="text-lg font-bold mb-3">{days[targetDay].day} - {days[targetDay].date} de {days[targetDay].month}</h2>
+          {tasks.filter((t: any) => t.date === days[targetDay].dateStr).length === 0 ? (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-8 text-center">
+              <p className="text-gray-400 mb-3">Nenhuma tarefa para este dia</p>
+              <button onClick={() => setShowModal(true)} className="bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-xl text-sm transition">
+                Adicionar tarefa
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tasks.filter((t: any) => t.date === days[targetDay].dateStr).map((task: any) => {
+                const colors = priorityColors[task.priority] || priorityColors.medium;
+                return (
+                  <div key={task.id} className={`bg-[#1a1a1a] border ${task.isCompleted ? 'border-green-500/30 opacity-70' : 'border-[#2a2a2a]'} rounded-2xl p-4`}>
+                    <div className="flex items-start gap-3">
+                      <button onClick={() => toggleComplete(task.id, task.isCompleted)}
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                          task.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-500 hover:border-cyan-400'
+                        }`}>
+                        {task.isCompleted && <span className="text-white text-xs">✓</span>}
+                      </button>
+                      <div className="flex-1">
+                        <h3 className={`font-bold ${task.isCompleted ? 'line-through text-gray-500' : ''}`}>{task.title}</h3>
+                        {task.description && <p className="text-sm text-gray-400 mt-1">{task.description}</p>}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full border ${colors.bg} ${colors.text}`}>
+                            {priorityLabels[task.priority] || task.priority}
+                          </span>
+                          {task.time && <span className="text-xs text-gray-500">{task.time}</span>}
+                          {task.isRecurring && <span className="text-xs text-blue-400">🔄 Recorrente</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => deleteTaskMut.mutate({ id: task.id })} className="p-1 hover:bg-red-500/20 rounded-lg transition">
+                        <X className="w-4 h-4 text-gray-500 hover:text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal Nova Tarefa */}
@@ -218,35 +237,51 @@ export default function Tasks() {
             <div className="space-y-5">
               <div>
                 <label className="text-sm text-gray-400 mb-2 block">Título *</label>
-                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="O que precisa ser feito?"
-                  className="w-full bg-[#2a2a2a] border border-[#333] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition" />
+                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ex: Reunião, Estudar, Compras..."
+                  className="w-full bg-[#2a2a2a] border border-[#333] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition" />
               </div>
 
               <div>
                 <label className="text-sm text-gray-400 mb-2 block">Descrição</label>
-                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Detalhes adicionais..." rows={3}
-                  className="w-full bg-[#2a2a2a] border border-[#333] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition resize-none" />
+                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Detalhes da tarefa..."
+                  className="w-full bg-[#2a2a2a] border border-[#333] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition h-20 resize-none" />
               </div>
 
-              {/* Tarefa Recorrente */}
-              <div className="flex items-center justify-between bg-[#2a2a2a] rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center"><span className="text-red-500">🔄</span></div>
-                  <div><p className="font-medium">Tarefa Recorrente</p><p className="text-xs text-gray-400">Repetir em dias específicos</p></div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Horário (opcional)</label>
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+                  className="w-full bg-[#2a2a2a] border border-[#333] rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition" />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Prioridade</label>
+                <div className="flex gap-2">
+                  {(["low", "medium", "high", "urgent"] as const).map(p => (
+                    <button key={p} onClick={() => setNewPriority(p)}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition ${newPriority === p ? 'bg-cyan-500 text-white' : 'bg-[#2a2a2a] text-gray-400 hover:bg-[#333]'}`}>
+                      {priorityLabels[p]}
+                    </button>
+                  ))}
                 </div>
-                <button onClick={() => setRecurrent(!recurrent)} className={`w-12 h-7 rounded-full transition-colors ${recurrent ? 'bg-red-500' : 'bg-[#444]'}`}>
-                  <div className={`w-5 h-5 bg-white rounded-full transition-transform ${recurrent ? 'translate-x-6' : 'translate-x-1'}`}></div>
-                </button>
               </div>
 
-              {/* Dias da semana */}
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${recurrent ? 'bg-cyan-500 border-cyan-500' : 'border-gray-500'}`}>
+                    {recurrent && <span className="text-white text-xs">✓</span>}
+                  </div>
+                  <input type="checkbox" checked={recurrent} onChange={e => setRecurrent(e.target.checked)} className="hidden" />
+                  <span className="text-sm">Tarefa recorrente</span>
+                </label>
+              </div>
+
               {recurrent && (
                 <div>
-                  <p className="text-sm text-gray-400 mb-3">Dias da semana</p>
+                  <label className="text-sm text-gray-400 mb-2 block">Dias da semana</label>
                   <div className="flex gap-2">
                     {weekDayLabels.map((d, i) => (
                       <button key={i} onClick={() => toggleDay(i)}
-                        className={`w-10 h-10 rounded-lg font-bold text-sm transition ${selectedDays.includes(i) ? 'bg-red-500 text-white' : 'bg-[#2a2a2a] text-gray-500 hover:bg-[#333]'}`}>
+                        className={`w-10 h-10 rounded-lg text-sm font-bold transition ${selectedDays.includes(i) ? 'bg-cyan-500 text-white' : 'bg-[#2a2a2a] text-gray-500 hover:bg-[#333]'}`}>
                         {d}
                       </button>
                     ))}
@@ -254,29 +289,25 @@ export default function Tasks() {
                 </div>
               )}
 
-              {/* Prioridade */}
-              <div>
-                <p className="text-sm text-gray-400 mb-2">Prioridade</p>
-                <div className="flex gap-2">
-                  {["Alta", "Média", "Baixa"].map(p => {
-                    const prio = priorityColors[p];
-                    return (
-                      <button key={p} onClick={() => setNewPriority(p)}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition border ${
-                          newPriority === p ? `${prio.bg} ${prio.text}` : 'bg-[#2a2a2a] border-[#333] text-gray-400 hover:bg-[#333]'
-                        }`}>
-                        <span className={`w-2 h-2 rounded-full ${prio.dot}`}></span>
-                        {p}
+              {!recurrent && (
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">Dia</label>
+                  <div className="flex gap-2 overflow-x-auto">
+                    {days.map((d, i) => (
+                      <button key={i} onClick={() => setTargetDay(i)}
+                        className={`px-3 py-2 rounded-xl text-sm shrink-0 transition ${targetDay === i ? 'bg-cyan-500 text-white' : 'bg-[#2a2a2a] text-gray-400 hover:bg-[#333]'}`}>
+                        {d.day.split('-')[0]} {d.date}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowModal(false)} className="flex-1 bg-[#2a2a2a] text-gray-300 py-3 rounded-xl font-medium hover:bg-[#333] transition">Cancelar</button>
-                <button onClick={createTask} className="flex-1 bg-red-500 text-white py-3 rounded-xl font-medium hover:bg-red-600 transition">Criar Tarefa</button>
+                <button onClick={createTask} disabled={createTaskMut.isPending} className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-medium hover:bg-cyan-600 transition disabled:opacity-50">
+                  {createTaskMut.isPending ? 'Criando...' : 'Criar Tarefa'}
+                </button>
               </div>
             </div>
           </div>

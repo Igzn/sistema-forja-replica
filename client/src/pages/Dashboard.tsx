@@ -1,45 +1,127 @@
 import Layout from "@/components/Layout";
 import { useNotifications } from "@/contexts/NotificationContext";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { trpc } from "@/lib/trpc";
 import { ChevronDown, ChevronUp, Info, Droplets, Clock, Flame, CheckCircle, Download, Bell, Settings, Plus, Minus } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 const weekDays = ["S", "T", "Q", "Q", "S", "S", "D"];
 const dayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+function getWeekDates() {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const dates: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
 export default function Dashboard() {
   const { addNotification } = useNotifications();
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(null);
-  const [waterByDay, setWaterByDay] = useLocalStorage<number[]>("life-water-by-day", [0, 0, 0, 0, 0, 0, 0]);
-  const [waterGoal, setWaterGoal] = useLocalStorage<number>("life-water-goal", 2000);
   const [showWaterSettings, setShowWaterSettings] = useState(false);
-  const [habitLinked, setHabitLinked] = useLocalStorage<boolean>("life-water-habit-linked", false);
-  const [habitsWeekData] = useLocalStorage<number[]>("life-habits-week", [0, 0, 0, 0, 0, 0, 0]);
-  const [tasksWeekData] = useLocalStorage<[number, number][]>("life-tasks-week", [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]);
+
+  const todayStr = useMemo(() => getTodayStr(), []);
+  const weekDates = useMemo(() => getWeekDates(), []);
+  const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+
+  // Backend queries
+  const profileQuery = trpc.profile.get.useQuery();
+  const waterQuery = trpc.water.get.useQuery({ date: todayStr });
+  const waterRangeQuery = trpc.water.getRange.useQuery({ startDate: weekDates[0], endDate: weekDates[6] });
+  const habitsQuery = trpc.habits.list.useQuery();
+  const completionsQuery = trpc.habits.completions.useQuery({ startDate: weekDates[0], endDate: weekDates[6] });
+  const tasksQuery = trpc.tasks.list.useQuery({ startDate: weekDates[0], endDate: weekDates[6] });
+  const focusSessionsQuery = trpc.focus.sessions.list.useQuery({ startDate: weekDates[0], endDate: weekDates[6] });
+
+  // Mutations
+  const waterUpdate = trpc.water.update.useMutation({
+    onSuccess: () => {
+      waterQuery.refetch();
+      waterRangeQuery.refetch();
+    },
+  });
+  const profileUpdate = trpc.profile.update.useMutation({
+    onSuccess: () => profileQuery.refetch(),
+  });
 
   const toggleAccordion = (id: string) => setExpandedAccordion(expandedAccordion === id ? null : id);
-  const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-  const waterAmount = waterByDay[todayIndex] || 0;
+
+  const waterAmount = waterQuery.data?.amountMl ?? 0;
+  const waterGoal = profileQuery.data?.waterGoalMl ?? 2000;
+
+  // Build water by day from range query
+  const waterByDay = useMemo(() => {
+    const result = [0, 0, 0, 0, 0, 0, 0];
+    if (waterRangeQuery.data) {
+      for (const log of waterRangeQuery.data) {
+        const idx = weekDates.indexOf(log.date);
+        if (idx >= 0) result[idx] = log.amountMl;
+      }
+    }
+    return result;
+  }, [waterRangeQuery.data, weekDates]);
+
+  // Habits week data
+  const habitsWeekData = useMemo(() => {
+    const result = [0, 0, 0, 0, 0, 0, 0];
+    const totalHabits = habitsQuery.data?.length ?? 0;
+    if (totalHabits === 0 || !completionsQuery.data) return result;
+    for (const comp of completionsQuery.data) {
+      const idx = weekDates.indexOf(comp.date);
+      if (idx >= 0) result[idx]++;
+    }
+    return result.map(count => totalHabits > 0 ? Math.round((count / totalHabits) * 100) : 0);
+  }, [habitsQuery.data, completionsQuery.data, weekDates]);
+
+  // Tasks week data
+  const tasksWeekData = useMemo(() => {
+    const result: [number, number][] = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]];
+    if (tasksQuery.data) {
+      for (const task of tasksQuery.data) {
+        const idx = weekDates.indexOf(task.date);
+        if (idx >= 0) {
+          result[idx][1]++;
+          if (task.isCompleted) result[idx][0]++;
+        }
+      }
+    }
+    return result;
+  }, [tasksQuery.data, weekDates]);
+
+  // Focus data
+  const focusMinutes = useMemo(() => {
+    if (!focusSessionsQuery.data) return 0;
+    return focusSessionsQuery.data.filter(s => s.type === 'focus').reduce((sum, s) => sum + s.duration, 0);
+  }, [focusSessionsQuery.data]);
+  const focusSessions = focusSessionsQuery.data?.filter(s => s.type === 'focus').length ?? 0;
+  const focusGoal = (profileQuery.data?.focusHoursGoal ?? 40) * 60;
+  const focusPercent = focusGoal > 0 ? Math.round((focusMinutes / focusGoal) * 100) : 0;
 
   const addWater = () => {
-    const newByDay = [...waterByDay];
-    newByDay[todayIndex] = (newByDay[todayIndex] || 0) + 250;
-    setWaterByDay(newByDay);
-    toast.success(`+250ml adicionado! Total: ${newByDay[todayIndex]}ml`);
-    if (newByDay[todayIndex] >= waterGoal) {
+    const newAmount = waterAmount + 250;
+    waterUpdate.mutate({ date: todayStr, amountMl: newAmount });
+    toast.success(`+250ml adicionado! Total: ${newAmount}ml`);
+    if (newAmount >= waterGoal && waterAmount < waterGoal) {
       addNotification({ type: 'water', title: 'Meta de Água Atingida!', message: `Parabéns! Você atingiu sua meta de ${waterGoal}ml hoje! +10 XP`, icon: '💧', color: 'text-cyan-400' });
-    } else if (newByDay[todayIndex] === Math.floor(waterGoal / 2)) {
-      addNotification({ type: 'water', title: 'Metade da Meta!', message: `Você já bebeu ${newByDay[todayIndex]}ml. Continue assim!`, icon: '💧', color: 'text-cyan-400' });
     }
   };
 
   const removeWater = () => {
-    if ((waterByDay[todayIndex] || 0) <= 0) return;
-    const newByDay = [...waterByDay];
-    newByDay[todayIndex] = Math.max(0, (newByDay[todayIndex] || 0) - 250);
-    setWaterByDay(newByDay);
-    toast.info(`-250ml removido. Total: ${newByDay[todayIndex]}ml`);
+    if (waterAmount <= 0) return;
+    const newAmount = Math.max(0, waterAmount - 250);
+    waterUpdate.mutate({ date: todayStr, amountMl: newAmount });
+    toast.info(`-250ml removido. Total: ${newAmount}ml`);
   };
 
   const waterPercent = Math.min(100, Math.round((waterAmount / waterGoal) * 100));
@@ -76,7 +158,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-bold">Março</h2>
+              <h2 className="text-xl font-bold">{new Date().toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase())}</h2>
               <p className="text-red-500 text-sm">{habitsAvg >= 80 ? 'Excelente!' : habitsAvg >= 50 ? 'Bom progresso' : 'Precisa melhorar'}</p>
             </div>
           </div>
@@ -86,17 +168,17 @@ export default function Dashboard() {
             <button onClick={() => toast.info("Sono: Sem dados registrados")} className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition">
               <span className="text-blue-400">🌙</span>
               <span className="text-xs text-blue-400">Sono</span>
-              <span className="text-xs text-gray-500 ml-1">-</span>
+              <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.sleepRating || '-'}</span>
             </button>
             <button onClick={() => toast.info("Energia: Sem dados registrados")} className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg hover:bg-yellow-500/20 transition">
               <span className="text-yellow-400">⚡</span>
               <span className="text-xs text-yellow-400">Energia</span>
-              <span className="text-xs text-gray-500 ml-1">-</span>
+              <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.energyRating || '-'}</span>
             </button>
             <button onClick={() => toast.info("Humor: Sem dados registrados")} className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg hover:bg-green-500/20 transition">
               <span className="text-green-400">😊</span>
               <span className="text-xs text-green-400">Humor</span>
-              <span className="text-xs text-gray-500 ml-1">-</span>
+              <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.humorRating || '-'}</span>
             </button>
           </div>
 
@@ -190,16 +272,16 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-gray-400">Meta diária</span>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setWaterGoal(Math.max(500, waterGoal - 250))} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
+                  <button onClick={() => profileUpdate.mutate({ waterGoalMl: Math.max(500, waterGoal - 250) })} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="font-bold w-16 text-center">{waterGoal}ml</span>
-                  <button onClick={() => setWaterGoal(waterGoal + 250)} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
+                  <button onClick={() => profileUpdate.mutate({ waterGoalMl: waterGoal + 250 })} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              <button onClick={() => { setShowWaterSettings(false); toast.success("Configurações salvas!"); }} className="w-full bg-cyan-500 text-white py-2 rounded-xl font-medium hover:bg-cyan-600 transition">
+              <button onClick={() => { setShowWaterSettings(false); toast.success("Configurações salvas!"); }} className="w-full bg-cyan-500 text-white py-2 rounded-lg font-medium hover:bg-cyan-600 transition">
                 Salvar
               </button>
             </div>
@@ -219,11 +301,11 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col items-center justify-center gap-2">
-              <button onClick={addWater} className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition">
+              <button onClick={addWater} disabled={waterUpdate.isPending} className="flex flex-col items-center gap-1 text-cyan-400 hover:text-cyan-300 transition disabled:opacity-50">
                 <Plus className="w-5 h-5" />
                 <span className="text-sm font-bold">+250ml</span>
               </button>
-              <button onClick={removeWater} className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-400 transition">
+              <button onClick={removeWater} disabled={waterUpdate.isPending} className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-400 transition disabled:opacity-50">
                 <Minus className="w-4 h-4" />
                 <span className="text-xs">-250ml</span>
               </button>
@@ -236,24 +318,6 @@ export default function Dashboard() {
               <span className="text-sm font-bold text-cyan-400">{waterPercent}%</span>
             </div>
           </div>
-
-          <div className="mt-4">
-            {!habitLinked ? (
-              <>
-                <p className="text-sm text-cyan-400 text-center mb-3">Nenhum hábito de água vinculado</p>
-                <button onClick={() => {
-                  setHabitLinked(true);
-                  toast.success('Hábito "Beber Água" criado e vinculado!');
-                  addNotification({ type: 'habit', title: 'Novo Hábito Criado!', message: 'O hábito "Beber Água" foi criado e vinculado ao tracker.', icon: '💧', color: 'text-cyan-400' });
-                }} className="w-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition">
-                  <Droplets className="w-4 h-4" />
-                  Criar hábito "Beber Água"
-                </button>
-              </>
-            ) : (
-              <p className="text-sm text-green-400 text-center">Hábito "Beber Água" vinculado ✓</p>
-            )}
-          </div>
         </div>
 
         {/* Card Horas de Foco */}
@@ -265,16 +329,16 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="font-bold">Horas de Foco</h3>
-                <p className="text-xs text-gray-400">0 sessões · meta 40h/sem</p>
+                <p className="text-xs text-gray-400">{focusSessions} sessões · meta {profileQuery.data?.focusHoursGoal ?? 40}h/sem</p>
               </div>
             </div>
-            <span className="text-2xl font-bold">0m</span>
+            <span className="text-2xl font-bold">{focusMinutes >= 60 ? `${Math.floor(focusMinutes / 60)}h${focusMinutes % 60 > 0 ? `${focusMinutes % 60}m` : ''}` : `${focusMinutes}m`}</span>
           </div>
           <div className="mt-3">
             <div className="bg-[#2a2a2a] rounded-full h-2">
-              <div className="bg-blue-500 h-full rounded-full" style={{ width: '0%' }}></div>
+              <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, focusPercent)}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">0% da meta semanal</p>
+            <p className="text-sm text-gray-500 mt-2">{focusPercent}% da meta semanal</p>
           </div>
         </div>
 

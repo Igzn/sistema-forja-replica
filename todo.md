@@ -49,3 +49,7 @@
 ## Notificações
 - [x] Sistema de notificações global
 - [x] Notificações integradas em todas as páginas
+
+## Renomeação
+- [x] Alterar VITE_APP_TITLE para "Sistema Life" (built-in, requer alteração manual em Settings > General)
+- [x] Verificar e corrigir todas as referências restantes a "Forja" ou "Replica" (package.json atualizado)

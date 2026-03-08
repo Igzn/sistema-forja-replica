@@ -4,12 +4,10 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
 import Goals from "./pages/Goals";
-import Community from "./pages/Community";
 import Finance from "./pages/Finance";
 import Focus from "./pages/Focus";
 
@@ -21,7 +19,6 @@ function Router() {
       <Route path={"/habits"} component={Habits} />
       <Route path={"/tasks"} component={Tasks} />
       <Route path={"/goals"} component={Goals} />
-      <Route path={"/community"} component={Community} />
       <Route path={"/finance"} component={Finance} />
       <Route path={"/focus"} component={Focus} />
       <Route path={"/404"} component={NotFound} />

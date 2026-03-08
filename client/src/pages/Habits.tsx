@@ -1,108 +1,283 @@
 import Layout from "@/components/Layout";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar, LayoutGrid, TrendingUp } from "lucide-react";
+import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const data = Array.from({ length: 31 }, (_, i) => ({
-  day: i + 1,
-  value: 0,
-}));
+const monthData = Array.from({ length: 31 }, (_, i) => ({ day: i + 1, value: 0 }));
 
 export default function Habits() {
+  const [activeTab, setActiveTab] = useState("mes");
+
   return (
     <Layout>
-      <div className="px-4 py-6 max-w-2xl mx-auto">
+      <div className="px-4 py-4 max-w-2xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Hábitos</h1>
-            <p className="text-sm text-gray-400">0/0 hoje</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Hábitos</h1>
+              <p className="text-sm text-gray-400">0/1 hoje</p>
+            </div>
           </div>
-          <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full flex items-center gap-2 transition">
-            <Plus className="w-5 h-5" />
+          <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-xl flex items-center gap-2 transition text-sm">
+            <Plus className="w-4 h-4" />
             Novo Hábito
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-3 mb-6 bg-[#1a1a1a] p-2 rounded-xl border border-[#333333]">
-          <button className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-medium transition">
-            📅 Hoje
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] p-1.5 rounded-xl flex gap-1">
+          <button onClick={() => setActiveTab("hoje")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'hoje' ? 'bg-[#2a2a2a] text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+            <Calendar className="w-4 h-4" />
+            Hoje
+            <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">1</span>
           </button>
-          <button className="flex-1 text-gray-400 py-2 px-4 rounded-lg hover:text-gray-300 transition">
-            📅 Mês
+          <button onClick={() => setActiveTab("mes")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'mes' ? 'bg-red-500 text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+            <Calendar className="w-4 h-4" />
+            Mês
           </button>
-          <button className="flex-1 text-gray-400 py-2 px-4 rounded-lg hover:text-gray-300 transition">
-            📊 Dashboards
+          <button onClick={() => setActiveTab("dashboards")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'dashboards' ? 'bg-red-500 text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+            <LayoutGrid className="w-4 h-4" />
+            Dashboards
           </button>
         </div>
 
-        {/* Period */}
-        <div className="text-center mb-6 text-gray-400">
-          <p>Março De 2026</p>
-        </div>
-
-        {/* Chart Card */}
-        <div className="bg-[#1a1a1a] rounded-2xl p-6 mb-6 border border-[#333333]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-bold text-lg">Evolução Mensal de hábitos</h3>
-              <p className="text-sm text-red-500">Março De 2026</p>
+        {/* Tab Content */}
+        {activeTab === "hoje" && (
+          <div className="space-y-4">
+            <p className="text-center text-gray-400">Março De 2026</p>
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                  <span className="text-lg">💧</span>
+                </div>
+                <div>
+                  <h3 className="font-bold">Beber Água</h3>
+                  <p className="text-xs text-gray-400">Diário · 0/8 copos</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="w-8 h-8 rounded-lg bg-[#2a2a2a] border border-[#333] flex items-center justify-center text-xs text-gray-500">{i + 1}</div>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-                <ChevronRight className="w-5 h-5" />
-              </button>
+          </div>
+        )}
+
+        {activeTab === "mes" && (
+          <div className="space-y-4">
+            <p className="text-center text-gray-400">Março De 2026</p>
+
+            {/* Chart Card */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Evolução Mensal de hábitos</h3>
+                    <p className="text-sm text-red-500">Março De 2026</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <button className="p-1.5 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronLeft className="w-4 h-4" /></button>
+                  <button className="p-1.5 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronRight className="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={monthData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                  <XAxis dataKey="day" stroke="#555" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#555" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
+                  <Line type="monotone" dataKey="value" stroke="#EF4444" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-red-500">0%</p>
+                  <p className="text-xs text-gray-400">Taxa média</p>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-red-400">0</p>
+                  <p className="text-xs text-gray-400">Concluídos</p>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-red-400">0%</p>
+                  <p className="text-xs text-gray-400">Melhor dia</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Boss section */}
+            <div className="flex gap-3">
+              <div className="flex-1 bg-[#1a1a1a] border border-red-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center"><span className="text-sm">🎯</span></div>
+                  <div>
+                    <p className="text-sm font-bold">Esta Semana</p>
+                    <p className="text-xs text-gray-400">1 dias</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 bg-[#1a1a1a] border border-green-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center"><span className="text-sm">✅</span></div>
+                  <div>
+                    <p className="text-sm font-bold">março</p>
+                    <p className="text-xs text-gray-400">8 dias</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Chart */}
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
-              <XAxis 
-                dataKey="day" 
-                stroke="#666666" 
-                tick={{ fontSize: 12 }}
-                interval={0}
-              />
-              <YAxis stroke="#666666" tick={{ fontSize: 12 }} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#FF3D3D" 
-                dot={{ fill: "#FF3D3D", r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {activeTab === "dashboards" && (
+          <div className="space-y-4">
+            {/* Day selector */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
+              <div className="flex gap-2 overflow-x-auto">
+                {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(d => (
+                  <button key={d} className={`w-9 h-9 rounded-full flex items-center justify-center text-sm shrink-0 ${d === 9 ? 'border-2 border-green-500 text-green-400' : 'text-gray-400 hover:bg-[#2a2a2a]'}`}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-[#2a1a1a] rounded-xl p-4 border border-[#4a2a2a] text-center">
-            <p className="text-2xl font-bold text-red-500">0%</p>
-            <p className="text-xs text-gray-400 mt-2">Taxa média</p>
-          </div>
-          <div className="bg-[#1a2a3a] rounded-xl p-4 border border-[#2a4a6a] text-center">
-            <p className="text-2xl font-bold text-cyan-400">0</p>
-            <p className="text-xs text-gray-400 mt-2">Concluídos</p>
-          </div>
-          <div className="bg-[#1a2a1a] rounded-xl p-4 border border-[#2a4a2a] text-center">
-            <p className="text-2xl font-bold text-green-400">0%</p>
-            <p className="text-xs text-gray-400 mt-2">Melhor dia</p>
-          </div>
-        </div>
+            {/* Produtividade */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center"><span>⚡</span></div>
+                <div>
+                  <h3 className="font-bold">Produtividade</h3>
+                  <p className="text-xs text-gray-400">Média: -</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {Array.from({ length: 11 }).map((_, i) => (
+                  <button key={i} className="flex-1 h-8 rounded bg-[#2a2a2a] text-xs text-gray-500 hover:bg-[#333] transition">{i}</button>
+                ))}
+              </div>
+            </div>
 
-        {/* Active Bosses Section */}
-        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-[#333333] text-center">
-          <div className="w-16 h-16 bg-[#2a2a2a] rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">💀</span>
+            {/* Humor */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center"><span>😊</span></div>
+                <div>
+                  <h3 className="font-bold">Humor</h3>
+                  <p className="text-xs text-gray-400">Média: -</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {Array.from({ length: 11 }).map((_, i) => (
+                  <button key={i} className="flex-1 h-8 rounded bg-[#2a2a2a] text-xs text-gray-500 hover:bg-[#333] transition">{i}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tendências de Bem-estar */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Tendências de Bem-estar</h3>
+                    <p className="text-sm text-gray-400">Março De 2026</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <button className="p-1.5 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronLeft className="w-4 h-4" /></button>
+                  <button className="p-1.5 hover:bg-[#2a2a2a] rounded-lg transition"><ChevronRight className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+                <p className="text-sm text-gray-400">✏️ Clique em um ponto do gráfico para editar dias anteriores</p>
+              </div>
+              <p className="text-center text-gray-500 py-8">Sem dados de bem-estar para este mês</p>
+              <div className="flex justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-xs text-gray-400">🌙 Sono</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-xs text-gray-400">⚡ Produtividade</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-400"></span><span className="text-xs text-gray-400">😊 Humor</span></div>
+              </div>
+            </div>
+
+            {/* Histórico de Hábitos */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">📊</span>
+                  <h3 className="font-bold">Histórico de Hábitos</h3>
+                </div>
+                <div className="flex gap-1 bg-[#2a2a2a] rounded-lg p-1">
+                  <button className="px-3 py-1 rounded text-xs bg-[#333] text-white">Mensal</button>
+                  <button className="px-3 py-1 rounded text-xs text-gray-400">Anual</button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mb-4">
+                <button className="p-1"><ChevronLeft className="w-4 h-4 text-gray-400" /></button>
+                <span className="font-bold">2026</span>
+                <button className="p-1"><ChevronRight className="w-4 h-4 text-gray-400" /></button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {["Jan", "Fev", "Mar"].map(m => (
+                  <div key={m} className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+                    <p className="text-xs text-gray-400">{m}</p>
+                    <p className="text-lg font-bold text-red-500">0%</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Comparativo Anual */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <h3 className="font-bold">Comparativo Anual</h3>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm">2025 <span className="font-bold">0%</span></span>
+                <span className="text-gray-500">—</span>
+                <span className="text-sm">2026 <span className="font-bold">0%</span></span>
+              </div>
+              <p className="text-center text-gray-500 text-sm">0%</p>
+            </div>
+
+            {/* Melhor Mês / Menor Taxa */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🏆</span>
+                  <span className="text-xs text-red-400">Melhor Mês</span>
+                </div>
+                <p className="font-bold">Janeiro</p>
+                <p className="text-red-500 text-sm">0%</p>
+              </div>
+              <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🎯</span>
+                  <span className="text-xs text-green-400">Menor Taxa</span>
+                </div>
+                <p className="font-bold">Março</p>
+                <p className="text-green-500 text-sm">0%</p>
+              </div>
+            </div>
           </div>
-          <h3 className="text-xl font-bold mb-2">Nenhum chefe ativo</h3>
-          <p className="text-gray-400">Novos chefes aparecerão em breve. Prepare-se!</p>
-        </div>
+        )}
       </div>
     </Layout>
   );

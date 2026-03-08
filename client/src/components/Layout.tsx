@@ -1,75 +1,290 @@
 import { useLocation } from "wouter";
-import { 
-  BarChart3, 
-  CheckSquare, 
-  Calendar, 
-  Target, 
-  Users, 
-  Wallet, 
+import { useState } from "react";
+import {
+  BarChart3,
+  CheckSquare,
+  Calendar,
+  Target,
+  Wallet,
   Clock,
   Zap,
-  Coins,
-  Skull,
-  Award,
-  User
+  User,
+  X,
+  Trophy,
+  Shield,
+  Medal,
+  ChevronDown,
 } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+/* ── XP Stats Popup ── */
+function XPPopup({ onClose }: { onClose: () => void }) {
+  const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+              <Zap className="w-6 h-6 text-red-500" />
+            </div>
+            <h2 className="text-lg font-bold">Estatísticas de XP</h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-4">
+          <p className="text-sm text-gray-400">Saldo de hoje</p>
+          <p className="text-3xl font-bold text-green-400">+5</p>
+          <p className="text-sm text-green-400">+5 ganho</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Semana</p>
+            <p className="text-xl font-bold">5</p>
+          </div>
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Mês</p>
+            <p className="text-xl font-bold">5</p>
+          </div>
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Nv. 2</p>
+            <p className="text-xl font-bold">5</p>
+          </div>
+        </div>
+        <h3 className="font-bold mb-3">Últimos 7 dias</h3>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-6">
+          <div className="flex items-end justify-between h-24 mb-2">
+            {days.map((d, i) => (
+              <div key={d} className="flex flex-col items-center gap-1 flex-1">
+                <div className="w-6 bg-red-500/30 rounded-t" style={{ height: i === 6 ? '60px' : '4px' }}></div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between">
+            {days.map(d => <span key={d} className="text-xs text-gray-500 flex-1 text-center">{d}</span>)}
+          </div>
+        </div>
+        <h3 className="font-bold mb-3">Resumo Semanal</h3>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-400">Total:</span>
+            <span className="font-bold text-green-400">+5 XP</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">Outros</span>
+            <div className="flex-1 bg-[#333] rounded-full h-2"><div className="bg-blue-500 h-full rounded-full" style={{ width: '100%' }}></div></div>
+            <span className="text-sm">100% +5</span>
+          </div>
+        </div>
+        <h3 className="font-bold mb-3">Atividades de hoje</h3>
+        <div className="bg-[#2a2a2a] rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">📅</span>
+              <div>
+                <p className="font-medium">Bônus diário de login</p>
+                <p className="text-xs text-gray-400">15:42</p>
+              </div>
+            </div>
+            <span className="text-green-400 font-bold">+5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Coins Popup ── */
+function CoinsPopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+              <span className="text-xl">💰</span>
+            </div>
+            <h2 className="text-lg font-bold">Forja Coins</h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-4 text-center">
+          <p className="text-sm text-gray-400">Saldo Total</p>
+          <p className="text-4xl font-bold text-yellow-400">1</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Ganho (semana)</p>
+            <p className="text-lg font-bold text-green-400">+0</p>
+          </div>
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Gasto (semana)</p>
+            <p className="text-lg font-bold text-red-400">-0</p>
+          </div>
+          <div className="bg-[#2a2a2a] rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400">Líquido</p>
+            <p className="text-lg font-bold">0</p>
+          </div>
+        </div>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-4">
+          <p className="text-sm text-gray-400">Você ganha 20% do XP em Forja Coins para gastar na loja!</p>
+        </div>
+        <div className="bg-[#2a2a2a] rounded-xl p-6 text-center">
+          <span className="text-3xl mb-2 block">💰</span>
+          <p className="text-gray-400 text-sm">Nenhuma transação ainda. Complete hábitos e tarefas para ganhar moedas!</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Titles Popup ── */
+function TitlesPopup({ onClose }: { onClose: () => void }) {
+  const blocked = [
+    { name: "Aprendiz", level: 5 },
+    { name: "Praticante", level: 10 },
+    { name: "Veterano", level: 15 },
+    { name: "Mestre", level: 20 },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold">Meus Títulos</h2>
+          <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-xl p-4 mb-6 text-center">
+          <p className="text-sm text-purple-200">Título Atual</p>
+          <p className="text-2xl font-bold">Iniciante</p>
+        </div>
+        <h3 className="font-bold mb-3 text-sm text-gray-400">Títulos Desbloqueados</h3>
+        <div className="bg-[#2a2a2a] rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-purple-400" />
+            <span className="font-medium">Iniciante</span>
+          </div>
+          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Equipado</span>
+        </div>
+        <h3 className="font-bold mb-3 text-sm text-gray-400">Títulos Bloqueados</h3>
+        <div className="space-y-3">
+          {blocked.map(t => (
+            <div key={t.name} className="bg-[#2a2a2a] rounded-xl p-4 flex items-center justify-between opacity-50">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-gray-500" />
+                <span className="font-medium">{t.name}</span>
+              </div>
+              <span className="text-xs text-gray-500">Nível {t.level}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Achievements Popup ── */
+function AchievementsPopup({ onClose }: { onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState("Todas");
+  const tabs = ["Todas", "Streaks", "Hábitos", "Conclusões", "Tarefas"];
+  const achievements = [
+    { name: "Primeiros Passos", rarity: "Comum", desc: "Complete 3 dias seguidos", progress: "0/3" },
+    { name: "Uma Semana Forte", rarity: "Comum", desc: "Complete 7 dias seguidos", progress: "0/7" },
+    { name: "Duas Semanas", rarity: "Incomum", desc: "Complete 14 dias seguidos", progress: "0/14" },
+    { name: "Mês de Ferro", rarity: "Raro", desc: "Complete 30 dias seguidos", progress: "0/30" },
+    { name: "Trimestre de Aço", rarity: "Épico", desc: "Complete 90 dias seguidos", progress: "0/90" },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
+      <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold">Conquistas <span className="text-gray-400 text-sm">0/21</span></h2>
+          <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {tabs.map(t => (
+            <button key={t} onClick={() => setActiveTab(t)}
+              className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition ${activeTab === t ? 'bg-red-500 text-white' : 'bg-[#2a2a2a] text-gray-400'}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+        <h3 className="text-sm text-gray-400 mb-3">Bloqueadas (21)</h3>
+        <div className="space-y-3">
+          {achievements.map(a => (
+            <div key={a.name} className="bg-[#2a2a2a] rounded-xl p-4 opacity-60">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium">{a.name}</span>
+                <span className="text-xs text-gray-500">{a.rarity}</span>
+              </div>
+              <p className="text-sm text-gray-400 mb-2">{a.desc}</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-[#333] rounded-full h-1.5"><div className="bg-red-500 h-full rounded-full" style={{ width: '0%' }}></div></div>
+                <span className="text-xs text-gray-500">{a.progress}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Layout ── */
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
+  const [popup, setPopup] = useState<string | null>(null);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: BarChart3 },
     { path: "/habits", label: "Hábitos", icon: CheckSquare },
     { path: "/tasks", label: "Tarefas", icon: Calendar },
     { path: "/goals", label: "Metas", icon: Target },
-    { path: "/community", label: "Comunid...", icon: Users },
     { path: "/finance", label: "Finanças", icon: Wallet },
     { path: "/focus", label: "Foco", icon: Clock },
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#0D0D0D] text-white overflow-hidden">
       {/* Header */}
-      <header className="bg-[#1a1a1a] border-b border-[#333333] px-4 py-3 flex items-center justify-between">
+      <header className="bg-[#1a1a1a] border-b border-[#2a2a2a] px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5" />
+          <div className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           </div>
-          <span className="text-sm font-medium">sistemaforja.com</span>
+          <span className="text-sm font-medium text-gray-300">sistemaforja.com</span>
         </div>
         <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </button>
       </header>
 
       {/* Top Bar - Status/Badges */}
-      <div className="bg-[#1a1a1a] border-b border-[#333333] px-4 py-3 flex items-center gap-4 overflow-x-auto">
-        <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-2 rounded-lg whitespace-nowrap">
+      <div className="bg-[#0D0D0D] px-4 py-2.5 flex items-center gap-3 shrink-0">
+        <button onClick={() => setPopup('xp')} className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1.5 rounded-full hover:bg-[#2a2a2a] transition">
           <Zap className="w-4 h-4 text-red-500" />
           <span className="text-sm font-bold text-red-500">+5</span>
-        </div>
-        <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-2 rounded-lg whitespace-nowrap">
-          <Coins className="w-4 h-4 text-yellow-500" />
-          <span className="text-sm font-bold text-yellow-500">1</span>
-        </div>
-        <div className="flex items-center gap-3 ml-auto">
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-            <Skull className="w-5 h-5 text-purple-500" />
+        </button>
+        <button onClick={() => setPopup('coins')} className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1.5 rounded-full hover:bg-[#2a2a2a] transition">
+          <span className="text-sm">💰</span>
+          <span className="text-sm font-bold text-yellow-400">1</span>
+        </button>
+        <div className="flex items-center gap-2 ml-auto">
+          <button onClick={() => setPopup('titles')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+            <Shield className="w-4 h-4 text-purple-400" />
           </button>
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-            <Award className="w-5 h-5 text-red-500" />
+          <button onClick={() => setPopup('achievements')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+            <Trophy className="w-4 h-4 text-red-500" />
           </button>
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-            <Award className="w-5 h-5 text-yellow-500" />
+          <button className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+            <Medal className="w-4 h-4 text-yellow-400" />
           </button>
-          <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-            <User className="w-5 h-5 text-gray-400" />
+          <button className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+            <User className="w-4 h-4 text-gray-400" />
           </button>
         </div>
       </div>
@@ -80,26 +295,30 @@ export default function Layout({ children }: LayoutProps) {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#333333] px-4 py-3 flex justify-around items-center">
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#2a2a2a] px-2 py-2 flex justify-around items-center z-40">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location === item.path;
+          const isActive = location === item.path || (item.path === "/" && location === "/dashboard");
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition ${
-                isActive
-                  ? "text-red-500"
-                  : "text-gray-400 hover:text-gray-300"
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition ${
+                isActive ? "text-red-500" : "text-gray-500 hover:text-gray-400"
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );
         })}
       </nav>
+
+      {/* Popups */}
+      {popup === 'xp' && <XPPopup onClose={() => setPopup(null)} />}
+      {popup === 'coins' && <CoinsPopup onClose={() => setPopup(null)} />}
+      {popup === 'titles' && <TitlesPopup onClose={() => setPopup(null)} />}
+      {popup === 'achievements' && <AchievementsPopup onClose={() => setPopup(null)} />}
     </div>
   );
 }

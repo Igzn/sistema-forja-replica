@@ -43,17 +43,17 @@
 }
 
 :root {
-  --primary: #FF3D3D;
+  --primary: #EF4444;
   --primary-foreground: #FFFFFF;
-  --sidebar-primary: #FF3D3D;
+  --sidebar-primary: #EF4444;
   --sidebar-primary-foreground: #FFFFFF;
-  --chart-1: #FF3D3D;
-  --chart-2: #FF3D3D;
-  --chart-3: #FF3D3D;
-  --chart-4: #FF3D3D;
-  --chart-5: #FF3D3D;
+  --chart-1: #EF4444;
+  --chart-2: #3B82F6;
+  --chart-3: #F59E0B;
+  --chart-4: #10B981;
+  --chart-5: #8B5CF6;
   --radius: 0.75rem;
-  --background: #0a0a0a;
+  --background: #0D0D0D;
   --foreground: #FFFFFF;
   --card: #1a1a1a;
   --card-foreground: #FFFFFF;
@@ -62,28 +62,28 @@
   --secondary: #2a2a2a;
   --secondary-foreground: #FFFFFF;
   --muted: #666666;
-  --muted-foreground: #AAAAAA;
-  --accent: #FF3D3D;
+  --muted-foreground: #9CA3AF;
+  --accent: #EF4444;
   --accent-foreground: #FFFFFF;
-  --destructive: #FF3D3D;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: #333333;
+  --border: #2a2a2a;
   --input: #2a2a2a;
-  --ring: #FF3D3D;
+  --ring: #EF4444;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-accent: #FF3D3D;
+  --sidebar-accent: #EF4444;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #333333;
-  --sidebar-ring: #FF3D3D;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #EF4444;
 }
 
 .dark {
-  --primary: #FF3D3D;
+  --primary: #EF4444;
   --primary-foreground: #FFFFFF;
-  --sidebar-primary: #FF3D3D;
+  --sidebar-primary: #EF4444;
   --sidebar-primary-foreground: #FFFFFF;
-  --background: #0a0a0a;
+  --background: #0D0D0D;
   --foreground: #FFFFFF;
   --card: #1a1a1a;
   --card-foreground: #FFFFFF;
@@ -92,25 +92,25 @@
   --secondary: #2a2a2a;
   --secondary-foreground: #FFFFFF;
   --muted: #666666;
-  --muted-foreground: #AAAAAA;
-  --accent: #FF3D3D;
+  --muted-foreground: #9CA3AF;
+  --accent: #EF4444;
   --accent-foreground: #FFFFFF;
-  --destructive: #FF3D3D;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: #333333;
+  --border: #2a2a2a;
   --input: #2a2a2a;
-  --ring: #FF3D3D;
-  --chart-1: #FF3D3D;
-  --chart-2: #FF3D3D;
-  --chart-3: #FF3D3D;
-  --chart-4: #FF3D3D;
-  --chart-5: #FF3D3D;
+  --ring: #EF4444;
+  --chart-1: #EF4444;
+  --chart-2: #3B82F6;
+  --chart-3: #F59E0B;
+  --chart-4: #10B981;
+  --chart-5: #8B5CF6;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-accent: #FF3D3D;
+  --sidebar-accent: #EF4444;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #333333;
-  --sidebar-ring: #FF3D3D;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #EF4444;
 }
 
 @layer base {
@@ -131,27 +131,29 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+
+  /* Scrollbar styling for dark theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,16 +164,16 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
 }

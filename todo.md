@@ -1,43 +1,38 @@
-# TODO - Réplica Sistema Forja
-
-## Layout/Navegação
-- [ ] Remover aba Comunidade do bottom nav (6 abas)
-- [ ] Ajustar Layout com top bar correta (badges clicáveis com popups)
-- [ ] Adicionar barra "Instalar App" no Dashboard
+# TODO - Correções Completas
 
 ## Dashboard
-- [ ] Card principal "Março" com círculo %, tags Sono/Energia/Humor
-- [ ] Sub-seções "Hábitos da Semana" e "Tarefas da Semana" com gráficos barras por dia
-- [ ] Card "Água" com gauge semicircular e barras por dia
-- [ ] Card "Horas de Foco" resumo
-- [ ] Seção "Como funciona o sistema de XP" com accordions detalhados (tabela XP)
-- [ ] Popups: Estatísticas de XP, Forja Coins, Meus Títulos, Conquistas
+- [ ] Água: botão +250ml incrementa valor, atualiza barras por dia e gauge
+- [ ] Água: configuração de meta diária funcional (engrenagem)
+- [ ] Água: "Criar hábito Beber Água" dá feedback (toast)
+- [ ] Accordions XP/Coins/Penalidades/Proteção com conteúdo detalhado
+- [ ] Instalar App e Notificação com feedback
 
 ## Hábitos
-- [ ] Header com ícone check vermelho + contador + botão "Novo Hábito"
-- [ ] Tabs: Hoje (badge), Mês, Dashboards
-- [ ] Aba Mês: gráfico evolução mensal + 3 cards estatísticas
-- [ ] Aba Dashboards: Produtividade/Humor sliders, Tendências, Histórico, Comparativo
+- [ ] Tab Hoje: checkboxes dos copos de água clicáveis e contam progresso
+- [ ] Tab Hoje: modal "Novo Hábito" funcional com campos
+- [ ] Tab Mês: gráfico e stats funcionais
+- [ ] Tab Dashboards: sliders Produtividade/Humor clicáveis e salvam valor
+- [ ] Botão "Novo Hábito" abre modal com campos completos
 
 ## Tarefas
-- [ ] Header com ícone calendário + contador + botão "Nova Tarefa"
-- [ ] Modal "Nova Tarefa" com campos Título, Descrição, Recorrente, Dias, Prioridade
+- [ ] Modal "Nova Tarefa" cria tarefa e adiciona na lista do dia
+- [ ] Tarefas criadas aparecem no dia correto com checkbox
+- [ ] Checkbox marca tarefa como concluída
+- [ ] Toggle recorrente e dias da semana funcionais
+- [ ] Prioridade selecionável
 
 ## Metas
-- [ ] Header com ícone alvo + "0 ativas · 0 concluídas" + botão "Nova Meta"
-- [ ] Tabs: Ativas, Concluídas, Pausadas
-- [ ] Empty state com "Nenhuma meta ativa" + botão "Criar meta"
+- [ ] Wizard 4 etapas funcional, cria meta e mostra na lista
+- [ ] Tabs Ativas/Concluídas/Pausadas filtram corretamente
+- [ ] Meta criada mostra progresso
 
 ## Finanças
-- [ ] Header com ícone pasta + "Gerenciar finanças"
-- [ ] Barra de 13 ícones de sub-abas
-- [ ] Aba Calendário: gráfico "Saldo por Mês" + cards mensais
-- [ ] FAB vermelho "+"
+- [ ] Todas 12 sub-tabs mostram conteúdo
+- [ ] FAB abre modal de nova transação
+- [ ] Cards mensais editáveis
 
 ## Foco
-- [ ] Timer Pomodoro com círculo grande 25:00
-- [ ] Controles Foco/Pausa com -/+
-- [ ] Botão "Iniciar" vermelho
-- [ ] "Horas de Foco" resumo semanal
-- [ ] Gráfico semanal + Meta 40h
-- [ ] "Projetos" + "Histórico"
+- [ ] Timer Pomodoro inicia/pausa/reseta corretamente
+- [ ] Ajuste foco/pausa com -/+ funcional
+- [ ] Seletor de projeto funcional
+- [ ] Fullscreen feedback

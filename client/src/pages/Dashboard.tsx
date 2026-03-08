@@ -1,12 +1,39 @@
 import Layout from "@/components/Layout";
-import { ChevronDown, ChevronUp, Info, Droplets, Clock, Flame, CheckCircle, Download, Bell } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Droplets, Clock, Flame, CheckCircle, Download, Bell, Settings, Plus, Minus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const weekDays = ["S", "T", "Q", "Q", "S", "S", "D"];
+const dayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 export default function Dashboard() {
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(null);
+  const [waterAmount, setWaterAmount] = useState(250);
+  const [waterGoal, setWaterGoal] = useState(2000);
+  const [waterByDay, setWaterByDay] = useState([0, 0, 0, 0, 0, 0, 250]);
+  const [showWaterSettings, setShowWaterSettings] = useState(false);
+
   const toggleAccordion = (id: string) => setExpandedAccordion(expandedAccordion === id ? null : id);
+
+  const addWater = () => {
+    const newByDay = [...waterByDay];
+    newByDay[6] = newByDay[6] + 250;
+    setWaterByDay(newByDay);
+    setWaterAmount(newByDay[6]);
+    toast.success(`+250ml adicionado! Total: ${newByDay[6]}ml`);
+  };
+
+  const removeWater = () => {
+    if (waterByDay[6] <= 0) return;
+    const newByDay = [...waterByDay];
+    newByDay[6] = Math.max(0, newByDay[6] - 250);
+    setWaterByDay(newByDay);
+    setWaterAmount(newByDay[6]);
+    toast.info(`-250ml removido. Total: ${newByDay[6]}ml`);
+  };
+
+  const waterPercent = Math.min(100, Math.round((waterAmount / waterGoal) * 100));
+  const gaugeOffset = 157 - (157 * waterPercent / 100);
 
   return (
     <Layout>
@@ -14,16 +41,17 @@ export default function Dashboard() {
 
         {/* Install App Bar */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <button onClick={() => toast.info("Para instalar, use o menu do navegador > 'Adicionar à tela inicial'")} className="flex items-center gap-3 hover:opacity-80 transition">
             <Download className="w-5 h-5 text-gray-400" />
             <span className="text-sm font-medium text-gray-300">Instalar App</span>
-          </div>
-          <Bell className="w-5 h-5 text-gray-400" />
+          </button>
+          <button onClick={() => toast.info("Nenhuma notificação nova")} className="p-1 hover:bg-[#2a2a2a] rounded-lg transition">
+            <Bell className="w-5 h-5 text-gray-400" />
+          </button>
         </div>
 
         {/* Main Card - Março */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
-          {/* Top section */}
           <div className="flex items-start gap-4 mb-5">
             <div className="relative w-16 h-16 shrink-0">
               <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
@@ -42,21 +70,21 @@ export default function Dashboard() {
 
           {/* Tags */}
           <div className="flex gap-3 mb-5">
-            <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg">
+            <button onClick={() => toast.info("Sono: Sem dados registrados")} className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition">
               <span className="text-blue-400">🌙</span>
               <span className="text-xs text-blue-400">Sono</span>
               <span className="text-xs text-gray-500 ml-1">-</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg">
+            </button>
+            <button onClick={() => toast.info("Energia: Sem dados registrados")} className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg hover:bg-yellow-500/20 transition">
               <span className="text-yellow-400">⚡</span>
               <span className="text-xs text-yellow-400">Energia</span>
               <span className="text-xs text-gray-500 ml-1">-</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg">
+            </button>
+            <button onClick={() => toast.info("Humor: Sem dados registrados")} className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg hover:bg-green-500/20 transition">
               <span className="text-green-400">😊</span>
               <span className="text-xs text-green-400">Humor</span>
               <span className="text-xs text-gray-500 ml-1">-</span>
-            </div>
+            </button>
           </div>
 
           {/* Hábitos da Semana */}
@@ -103,32 +131,58 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="font-bold">Água</h3>
-                <p className="text-xs text-gray-400">250ml / 2L</p>
+                <p className="text-xs text-gray-400">{waterAmount}ml / {waterGoal / 1000}L</p>
               </div>
             </div>
-            <button className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            <button onClick={() => setShowWaterSettings(!showWaterSettings)} className="p-2 hover:bg-[#2a2a2a] rounded-lg transition">
+              <Settings className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
+          {/* Water Settings Modal */}
+          {showWaterSettings && (
+            <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 mb-4">
+              <h4 className="text-sm font-bold mb-3">Configurações de Água</h4>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-400">Meta diária</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setWaterGoal(Math.max(500, waterGoal - 250))} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-bold w-16 text-center">{waterGoal}ml</span>
+                  <button onClick={() => setWaterGoal(waterGoal + 250)} className="w-8 h-8 bg-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#333] transition">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => { setShowWaterSettings(false); toast.success("Configurações salvas!"); }} className="w-full bg-cyan-500 text-white py-2 rounded-xl font-medium hover:bg-cyan-600 transition">
+                Salvar
+              </button>
+            </div>
+          )}
+
           {/* Water bars by day */}
           <div className="space-y-2 mb-4">
-            {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day, i) => (
+            {dayNames.map((day, i) => (
               <div key={day} className="flex items-center gap-3">
                 <span className={`text-xs w-8 ${i === 6 ? 'text-cyan-400 font-bold' : 'text-gray-500'}`}>{day}</span>
                 <div className="flex-1 bg-[#2a2a2a] rounded-full h-2">
-                  {i === 6 && <div className="bg-cyan-400 h-full rounded-full" style={{ width: '13%' }}></div>}
+                  <div className="bg-cyan-400 h-full rounded-full transition-all duration-300" style={{ width: `${Math.min(100, (waterByDay[i] / waterGoal) * 100)}%` }}></div>
                 </div>
-                <span className="text-xs text-gray-500 w-8 text-right">{i === 6 ? '250' : '-'}</span>
+                <span className="text-xs text-gray-500 w-8 text-right">{waterByDay[i] > 0 ? waterByDay[i] : '-'}</span>
               </div>
             ))}
           </div>
 
-          {/* Add water button */}
-          <div className="flex items-center justify-between mb-4">
-            <button className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
-              <span className="text-lg">+</span>
+          {/* Add/Remove water buttons */}
+          <div className="flex items-center gap-3 mb-4">
+            <button onClick={addWater} className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-4 py-2 rounded-xl hover:bg-cyan-500/20 transition">
+              <Plus className="w-4 h-4" />
               <span className="text-sm font-medium">+250ml</span>
+            </button>
+            <button onClick={removeWater} className="flex items-center gap-2 bg-[#2a2a2a] border border-[#333] text-gray-400 px-4 py-2 rounded-xl hover:bg-[#333] transition">
+              <Minus className="w-4 h-4" />
+              <span className="text-sm font-medium">-250ml</span>
             </button>
           </div>
 
@@ -137,18 +191,18 @@ export default function Dashboard() {
             <div className="relative w-32 h-16 overflow-hidden">
               <svg className="w-32 h-32" viewBox="0 0 120 60">
                 <path d="M10 55 A50 50 0 0 1 110 55" fill="none" stroke="#2a2a2a" strokeWidth="8" strokeLinecap="round" />
-                <path d="M10 55 A50 50 0 0 1 110 55" fill="none" stroke="#06B6D4" strokeWidth="8" strokeLinecap="round" strokeDasharray="157" strokeDashoffset={157 - (157 * 0.13)} />
+                <path d="M10 55 A50 50 0 0 1 110 55" fill="none" stroke="#06B6D4" strokeWidth="8" strokeLinecap="round" strokeDasharray="157" strokeDashoffset={gaugeOffset} className="transition-all duration-500" />
               </svg>
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-                <span className="text-sm font-bold text-cyan-400">13%</span>
+                <span className="text-sm font-bold text-cyan-400">{waterPercent}%</span>
               </div>
             </div>
           </div>
 
           <div className="text-center mb-3">
-            <p className="text-sm text-cyan-400">Nenhum hábito de água vinculado</p>
+            <p className="text-sm text-cyan-400">{waterAmount >= waterGoal ? "Meta atingida! 🎉" : "Nenhum hábito de água vinculado"}</p>
           </div>
-          <button className="w-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition">
+          <button onClick={() => toast.success("Hábito 'Beber Água' criado com sucesso!")} className="w-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition">
             <Droplets className="w-4 h-4" />
             Criar hábito "Beber Água"
           </button>
@@ -168,7 +222,12 @@ export default function Dashboard() {
             </div>
             <span className="text-2xl font-bold">0m</span>
           </div>
-          <p className="text-sm text-gray-500 mt-3">0% da meta semanal</p>
+          <div className="mt-3">
+            <div className="bg-[#2a2a2a] rounded-full h-2">
+              <div className="bg-blue-500 h-full rounded-full" style={{ width: '0%' }}></div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">0% da meta semanal</p>
+          </div>
         </div>
 
         {/* Como funciona o sistema de XP */}
@@ -191,28 +250,16 @@ export default function Dashboard() {
                 {expandedAccordion === 'xp' ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedAccordion === 'xp' && (
-                <div className="px-4 pb-4">
-                  <div className="border-t border-[#2a2a2a] pt-4">
-                    <div className="grid grid-cols-2 gap-y-3 text-sm">
-                      <span className="text-gray-400">Ação</span>
-                      <span className="text-gray-400 text-right">XP</span>
-                      <div className="flex items-center gap-2"><span>🔄</span> Completar hábito</div>
-                      <span className="text-red-400 text-right font-bold">+10</span>
-                      <span className="text-gray-500 pl-6">└ Bônus streak 3 dias</span>
-                      <span className="text-red-400 text-right font-bold">+20</span>
-                      <span className="text-gray-500 pl-6">└ Bônus streak 7 dias</span>
-                      <span className="text-red-400 text-right font-bold">+50</span>
-                      <span className="text-gray-500 pl-6">└ Bônus streak 30 dias</span>
-                      <span className="text-red-400 text-right font-bold">+200</span>
-                      <div className="flex items-center gap-2"><span>✅</span> Completar tarefa</div>
-                      <span className="text-red-400 text-right font-bold">+10</span>
-                      <div className="flex items-center gap-2"><span>📈</span> Progresso em meta (1x/dia)</div>
-                      <span className="text-red-400 text-right font-bold">+5</span>
-                      <div className="flex items-center gap-2"><span>🎯</span> Concluir meta</div>
-                      <span className="text-red-400 text-right font-bold">+100</span>
-                      <div className="flex items-center gap-2"><span>📅</span> Login diário</div>
-                      <span className="text-red-400 text-right font-bold">+5 a +25</span>
-                    </div>
+                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><div className="flex items-center gap-2"><span>🔄</span> Completar hábito</div><span className="text-red-400 font-bold">+10 XP</span></div>
+                    <div className="flex justify-between pl-6 text-gray-500"><span>└ Bônus streak 3 dias</span><span className="text-red-400 font-bold">+20 XP</span></div>
+                    <div className="flex justify-between pl-6 text-gray-500"><span>└ Bônus streak 7 dias</span><span className="text-red-400 font-bold">+50 XP</span></div>
+                    <div className="flex justify-between pl-6 text-gray-500"><span>└ Bônus streak 30 dias</span><span className="text-red-400 font-bold">+200 XP</span></div>
+                    <div className="flex justify-between"><div className="flex items-center gap-2"><span>✅</span> Completar tarefa</div><span className="text-red-400 font-bold">+10 XP</span></div>
+                    <div className="flex justify-between"><div className="flex items-center gap-2"><span>📈</span> Progresso em meta</div><span className="text-red-400 font-bold">+5 XP</span></div>
+                    <div className="flex justify-between"><div className="flex items-center gap-2"><span>🎯</span> Concluir meta</div><span className="text-red-400 font-bold">+100 XP</span></div>
+                    <div className="flex justify-between"><div className="flex items-center gap-2"><span>📅</span> Login diário</div><span className="text-red-400 font-bold">+5 a +25 XP</span></div>
                   </div>
                 </div>
               )}
@@ -228,8 +275,14 @@ export default function Dashboard() {
                 {expandedAccordion === 'coins' ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedAccordion === 'coins' && (
-                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4 text-sm text-gray-400">
-                  Você ganha 20% do XP em Forja Coins. Use na loja para comprar itens especiais, proteções e boosts.
+                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4">
+                  <div className="space-y-3 text-sm">
+                    <p className="text-gray-400">Você ganha <span className="text-yellow-400 font-bold">20% do XP</span> em Forja Coins.</p>
+                    <div className="flex justify-between"><span className="text-gray-400">Completar hábito</span><span className="text-yellow-400 font-bold">+2 coins</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Completar tarefa</span><span className="text-yellow-400 font-bold">+2 coins</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Concluir meta</span><span className="text-yellow-400 font-bold">+20 coins</span></div>
+                    <p className="text-gray-500 mt-2">Use na loja para comprar itens especiais, proteções e boosts.</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -244,8 +297,14 @@ export default function Dashboard() {
                 {expandedAccordion === 'penalties' ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedAccordion === 'penalties' && (
-                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4 text-sm text-gray-400">
-                  Não completar hábitos ou tarefas pode resultar em perda de XP e streaks.
+                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-400">Não completar hábito</span><span className="text-red-400 font-bold">-5 XP</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Perder streak de 3+ dias</span><span className="text-red-400 font-bold">-15 XP</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Perder streak de 7+ dias</span><span className="text-red-400 font-bold">-30 XP</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Tarefa atrasada</span><span className="text-red-400 font-bold">-3 XP/dia</span></div>
+                    <p className="text-gray-500 mt-2">Penalidades são aplicadas automaticamente ao final do dia.</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -260,8 +319,14 @@ export default function Dashboard() {
                 {expandedAccordion === 'protection' ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedAccordion === 'protection' && (
-                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4 text-sm text-gray-400">
-                  Use Forja Coins para comprar proteções contra perda de streak e XP.
+                <div className="px-4 pb-4 border-t border-[#2a2a2a] pt-4">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-400">Escudo de Streak (1 dia)</span><span className="text-yellow-400 font-bold">5 coins</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Escudo de Streak (3 dias)</span><span className="text-yellow-400 font-bold">12 coins</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Escudo de Streak (7 dias)</span><span className="text-yellow-400 font-bold">25 coins</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Proteção de XP (1 dia)</span><span className="text-yellow-400 font-bold">8 coins</span></div>
+                    <p className="text-gray-500 mt-2">Compre proteções na loja usando Forja Coins para evitar penalidades.</p>
+                  </div>
                 </div>
               )}
             </div>

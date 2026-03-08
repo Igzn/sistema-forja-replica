@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { checkAndSendReminders } from "../pushScheduler";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -59,6 +60,16 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+
+    // Start push notification scheduler (every 30 minutes)
+    setInterval(() => {
+      checkAndSendReminders().catch(err => console.error('[PushScheduler] Error:', err));
+    }, 30 * 60 * 1000);
+
+    // Run initial check after 10 seconds
+    setTimeout(() => {
+      checkAndSendReminders().catch(err => console.error('[PushScheduler] Initial check error:', err));
+    }, 10000);
   });
 }
 

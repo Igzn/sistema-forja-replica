@@ -53,3 +53,11 @@
 ## Renomeação
 - [x] Alterar VITE_APP_TITLE para "Sistema Life" (built-in, requer alteração manual em Settings > General)
 - [x] Verificar e corrigir todas as referências restantes a "Forja" ou "Replica" (package.json atualizado)
+
+## Notificações Push (PWA iOS)
+- [x] Gerar VAPID keys para Web Push API
+- [x] Atualizar Service Worker com push event handler
+- [x] Criar rota backend para salvar push subscription
+- [x] Criar rota backend para enviar notificações push
+- [x] Implementar pedido de permissão no frontend (botão no app)
+- [x] Agendar notificações automáticas (hábitos, tarefas, água, foco)

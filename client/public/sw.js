@@ -1,23 +1,18 @@
-const CACHE_NAME = 'sistema-life-v1';
-const STATIC_CACHE = 'sistema-life-static-v1';
-const DYNAMIC_CACHE = 'sistema-life-dynamic-v1';
+const CACHE_NAME = 'sistema-life-v2';
+const STATIC_CACHE = 'sistema-life-static-v2';
+const DYNAMIC_CACHE = 'sistema-life-dynamic-v2';
 
 // Resources to pre-cache on install
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/icons/apple-touch-icon.png',
 ];
 
 // Install event - pre-cache essential resources
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing Service Worker...');
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Pre-caching static assets');
       return cache.addAll(PRECACHE_URLS);
     }).then(() => {
       return self.skipWaiting();
@@ -27,16 +22,12 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       );
     }).then(() => {
       return self.clients.claim();
@@ -49,15 +40,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
-
-  // Skip chrome-extension and other non-http requests
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip analytics and external API calls
+  // Skip API calls
+  if (url.pathname.startsWith('/api/')) return;
+
   if (url.hostname !== self.location.hostname) {
-    // For Google Fonts and CDN resources - cache first strategy
     if (url.hostname.includes('fonts.googleapis.com') || 
         url.hostname.includes('fonts.gstatic.com') ||
         url.hostname.includes('cdn')) {
@@ -70,9 +59,7 @@ self.addEventListener('fetch', (event) => {
               caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
             }
             return response;
-          }).catch(() => {
-            return new Response('', { status: 408, statusText: 'Offline' });
-          });
+          }).catch(() => new Response('', { status: 408 }));
         })
       );
       return;
@@ -80,7 +67,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For navigation requests (HTML pages) - Network first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -89,16 +75,11 @@ self.addEventListener('fetch', (event) => {
           caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => {
-          return caches.match(request).then((cached) => {
-            return cached || caches.match('/');
-          });
-        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
     );
     return;
   }
 
-  // For static assets (JS, CSS, images) - Stale while revalidate
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)
@@ -109,12 +90,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => {
-          // Return cached version if network fails
-          return cached || new Response('', { status: 408, statusText: 'Offline' });
-        });
-
-      // Return cached immediately if available, otherwise wait for network
+        .catch(() => cached || new Response('', { status: 408 }));
       return cached || fetchPromise;
     })
   );
@@ -125,19 +101,74 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    const urls = event.data.urls;
-    caches.open(DYNAMIC_CACHE).then((cache) => {
-      cache.addAll(urls);
-    });
+});
+
+// ============ PUSH NOTIFICATIONS ============
+
+// Push event - receive push notification from server
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'Sistema Life',
+    body: 'Você tem uma nova notificação!',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    tag: 'default',
+    data: {},
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      data = { ...data, ...payload };
+    } catch (e) {
+      data.body = event.data.text();
+    }
   }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icons/icon-192x192.png',
+    badge: data.badge || '/icons/icon-72x72.png',
+    tag: data.tag || 'default',
+    renotify: true,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    data: data.data || {},
+    actions: [
+      { action: 'open', title: 'Abrir' },
+      { action: 'dismiss', title: 'Dispensar' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Notification click event - open the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const urlToOpen = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(urlToOpen);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(urlToOpen);
+    })
+  );
 });
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
-    console.log('[SW] Syncing data...');
     // Future: sync offline changes when back online
   }
 });

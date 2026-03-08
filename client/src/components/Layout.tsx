@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import {
   BarChart3,
   CheckSquare,
@@ -298,6 +299,57 @@ function AchievementsPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ── Push Notification Banner ── */
+function PushBanner() {
+  const { permission, isSubscribed, isSupported, isLoading, requestPermission } = usePushNotifications();
+  const [dismissed, setDismissed] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    // Show banner after 2 seconds if not subscribed and not dismissed
+    const wasDismissed = localStorage.getItem('push-banner-dismissed');
+    if (isSupported && !isSubscribed && permission !== 'denied' && !wasDismissed) {
+      const timer = setTimeout(() => setShowBanner(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSupported, isSubscribed, permission]);
+
+  if (!showBanner || dismissed || isSubscribed || permission === 'denied') return null;
+
+  return (
+    <div className="bg-gradient-to-r from-red-600 to-red-800 mx-4 mt-2 rounded-xl p-4 flex items-center gap-3 animate-in slide-in-from-top">
+      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+        <Bell className="w-5 h-5 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm">Ativar Notificações</p>
+        <p className="text-xs text-red-100">Receba lembretes de hábitos, tarefas e água!</p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={async () => {
+            await requestPermission();
+            setShowBanner(false);
+          }}
+          disabled={isLoading}
+          className="bg-white text-red-600 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
+        >
+          {isLoading ? 'Ativando...' : 'Ativar'}
+        </button>
+        <button
+          onClick={() => {
+            setDismissed(true);
+            localStorage.setItem('push-banner-dismissed', 'true');
+          }}
+          className="p-1 hover:bg-white/20 rounded-lg transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Layout ── */
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
@@ -364,6 +416,9 @@ export default function Layout({ children }: LayoutProps) {
           </button>
         </div>
       </div>
+
+      {/* Push Notification Banner */}
+      <PushBanner />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-20">

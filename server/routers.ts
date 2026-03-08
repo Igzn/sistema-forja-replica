@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { saveSubscription, removeSubscription, sendPushToUser } from "./pushNotifications";
 
 export const appRouter = router({
   system: systemRouter,
@@ -295,6 +296,42 @@ export const appRouter = router({
     clearAll: protectedProcedure.mutation(async ({ ctx }) => {
       await db.clearNotifications(ctx.user.id);
       return { success: true };
+    }),
+  }),
+
+  // ============ PUSH NOTIFICATIONS ============
+  push: router({
+    subscribe: protectedProcedure.input(z.object({
+      endpoint: z.string(),
+      keys: z.object({
+        p256dh: z.string(),
+        auth: z.string(),
+      }),
+    })).mutation(async ({ ctx, input }) => {
+      await saveSubscription(ctx.user.id, input);
+      return { success: true };
+    }),
+    unsubscribe: protectedProcedure.input(z.object({
+      endpoint: z.string(),
+    })).mutation(async ({ ctx, input }) => {
+      await removeSubscription(ctx.user.id, input.endpoint);
+      return { success: true };
+    }),
+    send: protectedProcedure.input(z.object({
+      title: z.string(),
+      body: z.string(),
+      icon: z.string().optional(),
+      tag: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      return sendPushToUser(ctx.user.id, input);
+    }),
+    test: protectedProcedure.mutation(async ({ ctx }) => {
+      return sendPushToUser(ctx.user.id, {
+        title: "Sistema Life",
+        body: "Notificações push ativadas com sucesso! 🎉",
+        icon: "/icons/icon-192x192.png",
+        tag: "test",
+      });
     }),
   }),
 });

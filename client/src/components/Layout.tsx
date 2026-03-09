@@ -20,6 +20,7 @@ import {
   Bell,
   Trash2,
   CheckCheck,
+  Lock,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -255,46 +256,119 @@ function TitlesPopup({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Achievements Popup ── */
+const ALL_ACHIEVEMENTS_LIST = [
+  // Streaks (7)
+  { name: "Primeiros Passos", rarity: "Comum", desc: "Complete 3 dias seguidos de um hábito", target: 3, current: 0, category: "Streaks" },
+  { name: "Uma Semana Forte", rarity: "Comum", desc: "Complete 7 dias seguidos de um hábito", target: 7, current: 0, category: "Streaks" },
+  { name: "Duas Semanas", rarity: "Incomum", desc: "Complete 14 dias seguidos de um hábito", target: 14, current: 0, category: "Streaks" },
+  { name: "Mestre do Mês", rarity: "Raro", desc: "Complete 30 dias seguidos de um hábito", target: 30, current: 0, category: "Streaks" },
+  { name: "Dois Meses Invicto", rarity: "Épico", desc: "Complete 60 dias seguidos de um hábito", target: 60, current: 0, category: "Streaks" },
+  { name: "Centurião", rarity: "Lendário", desc: "Complete 100 dias seguidos de um hábito", target: 100, current: 0, category: "Streaks" },
+  { name: "Um Ano Inteiro", rarity: "Mítico", desc: "Complete 365 dias seguidos de um hábito", target: 365, current: 0, category: "Streaks" },
+  // Hábitos (7)
+  { name: "Colecionador", rarity: "Comum", desc: "Crie 3 hábitos diferentes", target: 3, current: 0, category: "Hábitos" },
+  { name: "Diversificado", rarity: "Incomum", desc: "Crie 5 hábitos diferentes", target: 5, current: 0, category: "Hábitos" },
+  { name: "Multi-Talento", rarity: "Raro", desc: "Crie 10 hábitos diferentes", target: 10, current: 0, category: "Hábitos" },
+  { name: "Iniciante Dedicado", rarity: "Comum", desc: "Complete 50 hábitos no total", target: 50, current: 0, category: "Hábitos" },
+  { name: "Consistente", rarity: "Incomum", desc: "Complete 100 hábitos no total", target: 100, current: 0, category: "Hábitos" },
+  { name: "Disciplinado", rarity: "Raro", desc: "Complete 500 hábitos no total", target: 500, current: 0, category: "Hábitos" },
+  { name: "Lendário", rarity: "Épico", desc: "Complete 1000 hábitos no total", target: 1000, current: 0, category: "Hábitos" },
+  // Tarefas (3)
+  { name: "Produtivo", rarity: "Comum", desc: "Complete 10 tarefas", target: 10, current: 0, category: "Tarefas" },
+  { name: "Eficiente", rarity: "Incomum", desc: "Complete 50 tarefas", target: 50, current: 0, category: "Tarefas" },
+  { name: "Máquina de Produtividade", rarity: "Raro", desc: "Complete 100 tarefas", target: 100, current: 0, category: "Tarefas" },
+  // Conclusões (4)
+  { name: "Sonhador Realista", rarity: "Comum", desc: "Complete sua primeira meta", target: 1, current: 0, category: "Conclusões" },
+  { name: "Conquistador", rarity: "Raro", desc: "Complete 5 metas", target: 5, current: 0, category: "Conclusões" },
+  { name: "Semana Perfeita", rarity: "Épico", desc: "Complete todos os hábitos por 7 dias seguidos", target: 7, current: 0, category: "Conclusões" },
+  { name: "Madrugador", rarity: "Incomum", desc: "Complete um hábito antes das 6h", target: 1, current: 0, category: "Conclusões" },
+];
+
+function getRarityBadgeColor(rarity: string) {
+  switch (rarity) {
+    case "Comum": return "bg-[#333] text-gray-300";
+    case "Incomum": return "bg-[#333] text-gray-300";
+    case "Raro": return "bg-[#333] text-gray-300";
+    case "Épico": return "bg-[#333] text-gray-300";
+    case "Lendário": return "bg-[#333] text-gray-300";
+    case "Mítico": return "bg-[#333] text-gray-300";
+    default: return "bg-[#333] text-gray-300";
+  }
+}
+
 function AchievementsPopup({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState("Todas");
   const tabs = ["Todas", "Streaks", "Hábitos", "Conclusões", "Tarefas"];
-  const achievements = [
-    { name: "Primeiros Passos", rarity: "Comum", desc: "Complete 3 dias seguidos", progress: "0/3" },
-    { name: "Uma Semana Forte", rarity: "Comum", desc: "Complete 7 dias seguidos", progress: "0/7" },
-    { name: "Duas Semanas", rarity: "Incomum", desc: "Complete 14 dias seguidos", progress: "0/14" },
-    { name: "Mês de Ferro", rarity: "Raro", desc: "Complete 30 dias seguidos", progress: "0/30" },
-    { name: "Trimestre de Aço", rarity: "Épico", desc: "Complete 90 dias seguidos", progress: "0/90" },
-  ];
+
+  const filtered = activeTab === "Todas"
+    ? ALL_ACHIEVEMENTS_LIST
+    : ALL_ACHIEVEMENTS_LIST.filter(a => a.category === activeTab);
+
+  const blockedCount = filtered.length;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center" onClick={onClose}>
       <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold">Conquistas <span className="text-gray-400 text-sm">0/21</span></h2>
-          <button onClick={onClose} className="p-2 hover:bg-[#2a2a2a] rounded-lg"><X className="w-5 h-5" /></button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14 2 9.2h7.6z" />
+            </svg>
+            <h2 className="text-lg font-bold">Conquistas</h2>
+            <span className="text-sm bg-[#333] text-gray-300 px-2 py-0.5 rounded-full">0/21</span>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full border border-[#444] hover:bg-[#2a2a2a] transition">
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-2">
           {tabs.map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition ${activeTab === t ? 'bg-red-500 text-white' : 'bg-[#2a2a2a] text-gray-400'}`}>
+              className={`px-3.5 py-1.5 rounded-full text-sm whitespace-nowrap transition font-medium ${
+                activeTab === t ? 'bg-red-500 text-white' : 'bg-[#2a2a2a] text-gray-400 hover:text-gray-300'
+              }`}>
               {t}
             </button>
           ))}
         </div>
-        <h3 className="text-sm text-gray-400 mb-3">Bloqueadas (21)</h3>
+
+        {/* Blocked header */}
+        <div className="flex items-center gap-2 mb-4">
+          <Lock className="w-4 h-4 text-gray-500" />
+          <span className="text-sm text-gray-400">Bloqueadas ({blockedCount})</span>
+        </div>
+
+        {/* Achievement cards */}
         <div className="space-y-3">
-          {achievements.map(a => (
-            <div key={a.name} className="bg-[#2a2a2a] rounded-xl p-4 opacity-60">
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-medium">{a.name}</span>
-                <span className="text-xs text-gray-500">{a.rarity}</span>
+          {filtered.map(a => {
+            const progressPercent = a.target > 0 ? Math.min((a.current / a.target) * 100, 100) : 0;
+            return (
+              <div key={a.name} className="bg-[#2a2a2a] rounded-xl p-4 flex gap-4">
+                {/* Lock icon */}
+                <div className="w-14 h-14 bg-[#333] rounded-xl flex items-center justify-center shrink-0">
+                  <Lock className="w-6 h-6 text-gray-500" />
+                </div>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-bold text-white">{a.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${getRarityBadgeColor(a.rarity)}`}>{a.rarity}</span>
+                  </div>
+                  <p className="text-sm text-gray-400 mb-2">{a.desc}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-500">Progresso</span>
+                    <span className="text-xs text-red-500 font-bold">{a.current}/{a.target}</span>
+                  </div>
+                  <div className="w-full bg-[#444] rounded-full h-1.5">
+                    <div className="bg-red-500 h-full rounded-full transition-all" style={{ width: `${progressPercent}%` }}></div>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-400 mb-2">{a.desc}</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-[#333] rounded-full h-1.5"><div className="bg-red-500 h-full rounded-full" style={{ width: '0%' }}></div></div>
-                <span className="text-xs text-gray-500">{a.progress}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

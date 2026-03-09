@@ -80,3 +80,13 @@
 - [x] Usar seta voltar em vez de X no título da seleção
 - [x] Remover "- Slot X" do título da seleção (só "Selecionar Conquista")
 - [x] Remover opção "Remover conquista deste slot" da seleção
+
+## Correção Popup Conquistas (Troféu) - Fidelidade ao Forja Original
+- [x] Reescrever AchievementsPopup com TODAS as 21 conquistas exatas do Forja
+- [x] Corrigir nomes: Mestre do Mês, Dois Meses Invicto, Centurião, Um Ano Inteiro, etc.
+- [x] Corrigir descrições: "Complete X dias seguidos de um hábito" (não só "dias seguidos")
+- [x] Adicionar ícone de cadeado cinza à esquerda de cada card bloqueado
+- [x] Adicionar barra de progresso individual com "Progresso" e "0/X" em vermelho
+- [x] Adicionar seção "Bloqueadas (21)" com ícone cadeado como header
+- [x] Garantir que as tabs filtram corretamente: Streaks, Hábitos, Conclusões, Tarefas
+- [x] Adicionar raridades corretas: Comum, Incomum, Raro, Épico, Lendário, Mítico

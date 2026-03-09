@@ -8,6 +8,11 @@ import {
   tasks, InsertTask,
   goals, InsertGoal,
   transactions, InsertTransaction,
+  financialCards, InsertFinancialCard,
+  bankAccounts, InsertBankAccount,
+  shoppingItems, InsertShoppingItem,
+  budgetRules, InsertBudgetRule,
+  financeNotes, InsertFinanceNote,
   focusProjects, InsertFocusProject,
   focusSessions, InsertFocusSession,
   waterLogs, InsertWaterLog,
@@ -212,10 +217,161 @@ export async function createTransaction(data: InsertTransaction) {
   return created[0] ?? null;
 }
 
+export async function updateTransaction(id: number, userId: number, data: Partial<InsertTransaction>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(transactions).set(data).where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+}
+
 export async function deleteTransaction(id: number, userId: number) {
   const db = await getDb();
   if (!db) return;
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+}
+
+// ============ FINANCIAL CARDS ============
+
+export async function getFinancialCards(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(financialCards).where(and(eq(financialCards.userId, userId), eq(financialCards.isActive, true))).orderBy(desc(financialCards.createdAt));
+}
+
+export async function createFinancialCard(data: InsertFinancialCard) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(financialCards).values(data);
+  const id = result[0].insertId;
+  const created = await db.select().from(financialCards).where(eq(financialCards.id, id)).limit(1);
+  return created[0] ?? null;
+}
+
+export async function updateFinancialCard(id: number, userId: number, data: Partial<InsertFinancialCard>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(financialCards).set(data).where(and(eq(financialCards.id, id), eq(financialCards.userId, userId)));
+}
+
+export async function deleteFinancialCard(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(financialCards).set({ isActive: false }).where(and(eq(financialCards.id, id), eq(financialCards.userId, userId)));
+}
+
+// ============ BANK ACCOUNTS ============
+
+export async function getBankAccounts(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bankAccounts).where(and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true))).orderBy(desc(bankAccounts.createdAt));
+}
+
+export async function createBankAccount(data: InsertBankAccount) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(bankAccounts).values(data);
+  const id = result[0].insertId;
+  const created = await db.select().from(bankAccounts).where(eq(bankAccounts.id, id)).limit(1);
+  return created[0] ?? null;
+}
+
+export async function updateBankAccount(id: number, userId: number, data: Partial<InsertBankAccount>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(bankAccounts).set(data).where(and(eq(bankAccounts.id, id), eq(bankAccounts.userId, userId)));
+}
+
+export async function deleteBankAccount(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(bankAccounts).set({ isActive: false }).where(and(eq(bankAccounts.id, id), eq(bankAccounts.userId, userId)));
+}
+
+// ============ SHOPPING ITEMS ============
+
+export async function getShoppingItems(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(shoppingItems).where(eq(shoppingItems.userId, userId)).orderBy(desc(shoppingItems.createdAt));
+}
+
+export async function createShoppingItem(data: InsertShoppingItem) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(shoppingItems).values(data);
+  const id = result[0].insertId;
+  const created = await db.select().from(shoppingItems).where(eq(shoppingItems.id, id)).limit(1);
+  return created[0] ?? null;
+}
+
+export async function updateShoppingItem(id: number, userId: number, data: Partial<InsertShoppingItem>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(shoppingItems).set(data).where(and(eq(shoppingItems.id, id), eq(shoppingItems.userId, userId)));
+}
+
+export async function deleteShoppingItem(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(shoppingItems).where(and(eq(shoppingItems.id, id), eq(shoppingItems.userId, userId)));
+}
+
+// ============ BUDGET RULES ============
+
+export async function getBudgetRules(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(budgetRules).where(and(eq(budgetRules.userId, userId), eq(budgetRules.isActive, true))).orderBy(desc(budgetRules.createdAt));
+}
+
+export async function createBudgetRule(data: InsertBudgetRule) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(budgetRules).values(data);
+  const id = result[0].insertId;
+  const created = await db.select().from(budgetRules).where(eq(budgetRules.id, id)).limit(1);
+  return created[0] ?? null;
+}
+
+export async function updateBudgetRule(id: number, userId: number, data: Partial<InsertBudgetRule>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(budgetRules).set(data).where(and(eq(budgetRules.id, id), eq(budgetRules.userId, userId)));
+}
+
+export async function deleteBudgetRule(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(budgetRules).set({ isActive: false }).where(and(eq(budgetRules.id, id), eq(budgetRules.userId, userId)));
+}
+
+// ============ FINANCE NOTES ============
+
+export async function getFinanceNotes(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(financeNotes).where(eq(financeNotes.userId, userId)).orderBy(desc(financeNotes.updatedAt));
+}
+
+export async function createFinanceNote(data: InsertFinanceNote) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(financeNotes).values(data);
+  const id = result[0].insertId;
+  const created = await db.select().from(financeNotes).where(eq(financeNotes.id, id)).limit(1);
+  return created[0] ?? null;
+}
+
+export async function updateFinanceNote(id: number, userId: number, data: Partial<InsertFinanceNote>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(financeNotes).set(data).where(and(eq(financeNotes.id, id), eq(financeNotes.userId, userId)));
+}
+
+export async function deleteFinanceNote(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(financeNotes).where(and(eq(financeNotes.id, id), eq(financeNotes.userId, userId)));
 }
 
 // ============ FOCUS PROJECTS ============

@@ -90,3 +90,16 @@
 - [x] Adicionar seção "Bloqueadas (21)" com ícone cadeado como header
 - [x] Garantir que as tabs filtram corretamente: Streaks, Hábitos, Conclusões, Tarefas
 - [x] Adicionar raridades corretas: Comum, Incomum, Raro, Épico, Lendário, Mítico
+
+## Desbloqueio Completo da Aba Finanças (9 sub-tabs bloqueadas)
+- [x] Desbloquear tab Cartões: CRUD de cartões de crédito/débito
+- [x] Desbloquear tab Compras: lista de compras/desejos
+- [x] Desbloquear tab Contas: contas bancárias CRUD
+- [x] Desbloquear tab Categorias: gerenciamento de categorias
+- [x] Desbloquear tab Regras: limites de gastos por categoria
+- [x] Desbloquear tab Monitor: dashboard financeiro
+- [x] Desbloquear tab Notas: notas financeiras
+- [x] Desbloquear tab Transferências: transferências entre contas
+- [x] Desbloquear tab Alocação: alocação de orçamento
+- [x] Mostrar todos os 12 meses no calendário (atualmente só 6)
+- [x] Backend: rotas CRUD para cards, accounts, shopping, rules, notes

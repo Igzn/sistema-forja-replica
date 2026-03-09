@@ -207,11 +207,190 @@ export const appRouter = router({
     })).mutation(async ({ ctx, input }) => {
       return db.createTransaction({ ...input, userId: ctx.user.id });
     }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      amount: z.number().optional(),
+      type: z.enum(["income", "expense"]).optional(),
+      category: z.string().optional(),
+      date: z.string().optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      await db.updateTransaction(id, ctx.user.id, data);
+      return { success: true };
+    }),
     delete: protectedProcedure.input(z.object({
       id: z.number(),
     })).mutation(async ({ ctx, input }) => {
       await db.deleteTransaction(input.id, ctx.user.id);
       return { success: true };
+    }),
+    // ---- Financial Cards ----
+    cards: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getFinancialCards(ctx.user.id);
+      }),
+      create: protectedProcedure.input(z.object({
+        name: z.string().min(1),
+        brand: z.string().default("Visa"),
+        type: z.enum(["credit", "debit"]).default("credit"),
+        lastDigits: z.string().max(4).optional(),
+        cardLimit: z.number().optional(),
+        closingDay: z.number().min(1).max(31).optional(),
+        dueDay: z.number().min(1).max(31).optional(),
+        color: z.string().default("#EF4444"),
+      })).mutation(async ({ ctx, input }) => {
+        return db.createFinancialCard({ ...input, userId: ctx.user.id });
+      }),
+      update: protectedProcedure.input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        brand: z.string().optional(),
+        type: z.enum(["credit", "debit"]).optional(),
+        lastDigits: z.string().max(4).optional(),
+        cardLimit: z.number().optional(),
+        closingDay: z.number().optional(),
+        dueDay: z.number().optional(),
+        color: z.string().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateFinancialCard(id, ctx.user.id, data);
+        return { success: true };
+      }),
+      delete: protectedProcedure.input(z.object({
+        id: z.number(),
+      })).mutation(async ({ ctx, input }) => {
+        await db.deleteFinancialCard(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    }),
+    // ---- Bank Accounts ----
+    accounts: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getBankAccounts(ctx.user.id);
+      }),
+      create: protectedProcedure.input(z.object({
+        name: z.string().min(1),
+        type: z.enum(["checking", "savings", "investment", "wallet"]).default("checking"),
+        balance: z.number().default(0),
+        icon: z.string().default("\uD83C\uDFE6"),
+        color: z.string().default("#3B82F6"),
+      })).mutation(async ({ ctx, input }) => {
+        return db.createBankAccount({ ...input, userId: ctx.user.id });
+      }),
+      update: protectedProcedure.input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        type: z.enum(["checking", "savings", "investment", "wallet"]).optional(),
+        balance: z.number().optional(),
+        icon: z.string().optional(),
+        color: z.string().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateBankAccount(id, ctx.user.id, data);
+        return { success: true };
+      }),
+      delete: protectedProcedure.input(z.object({
+        id: z.number(),
+      })).mutation(async ({ ctx, input }) => {
+        await db.deleteBankAccount(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    }),
+    // ---- Shopping Items ----
+    shopping: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getShoppingItems(ctx.user.id);
+      }),
+      create: protectedProcedure.input(z.object({
+        name: z.string().min(1),
+        estimatedPrice: z.number().optional(),
+        category: z.string().optional(),
+        priority: z.enum(["low", "medium", "high"]).default("medium"),
+        link: z.string().optional(),
+        notes: z.string().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        return db.createShoppingItem({ ...input, userId: ctx.user.id });
+      }),
+      update: protectedProcedure.input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        estimatedPrice: z.number().optional(),
+        category: z.string().optional(),
+        priority: z.enum(["low", "medium", "high"]).optional(),
+        status: z.enum(["pending", "bought", "cancelled"]).optional(),
+        link: z.string().optional(),
+        notes: z.string().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateShoppingItem(id, ctx.user.id, data);
+        return { success: true };
+      }),
+      delete: protectedProcedure.input(z.object({
+        id: z.number(),
+      })).mutation(async ({ ctx, input }) => {
+        await db.deleteShoppingItem(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    }),
+    // ---- Budget Rules ----
+    rules: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getBudgetRules(ctx.user.id);
+      }),
+      create: protectedProcedure.input(z.object({
+        category: z.string().min(1),
+        monthlyLimit: z.number().positive(),
+        alertAt: z.number().min(1).max(100).default(80),
+      })).mutation(async ({ ctx, input }) => {
+        return db.createBudgetRule({ ...input, userId: ctx.user.id });
+      }),
+      update: protectedProcedure.input(z.object({
+        id: z.number(),
+        category: z.string().optional(),
+        monthlyLimit: z.number().optional(),
+        alertAt: z.number().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateBudgetRule(id, ctx.user.id, data);
+        return { success: true };
+      }),
+      delete: protectedProcedure.input(z.object({
+        id: z.number(),
+      })).mutation(async ({ ctx, input }) => {
+        await db.deleteBudgetRule(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    }),
+    // ---- Finance Notes ----
+    notes: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getFinanceNotes(ctx.user.id);
+      }),
+      create: protectedProcedure.input(z.object({
+        title: z.string().min(1),
+        content: z.string().optional(),
+        color: z.string().default("#FBBF24"),
+      })).mutation(async ({ ctx, input }) => {
+        return db.createFinanceNote({ ...input, userId: ctx.user.id });
+      }),
+      update: protectedProcedure.input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        color: z.string().optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateFinanceNote(id, ctx.user.id, data);
+        return { success: true };
+      }),
+      delete: protectedProcedure.input(z.object({
+        id: z.number(),
+      })).mutation(async ({ ctx, input }) => {
+        await db.deleteFinanceNote(input.id, ctx.user.id);
+        return { success: true };
+      }),
     }),
   }),
 

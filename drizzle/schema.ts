@@ -143,6 +143,98 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
 
 /**
+ * Financial Cards (credit/debit)
+ */
+export const financialCards = mysqlTable("financial_cards", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  brand: varchar("brand", { length: 50 }).default("Visa").notNull(),
+  type: mysqlEnum("type", ["credit", "debit"]).default("credit").notNull(),
+  lastDigits: varchar("lastDigits", { length: 4 }),
+  cardLimit: float("cardLimit").default(0),
+  closingDay: int("closingDay").default(1),
+  dueDay: int("dueDay").default(10),
+  color: varchar("color", { length: 20 }).default("#EF4444").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FinancialCard = typeof financialCards.$inferSelect;
+export type InsertFinancialCard = typeof financialCards.$inferInsert;
+
+/**
+ * Bank Accounts
+ */
+export const bankAccounts = mysqlTable("bank_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["checking", "savings", "investment", "wallet"]).default("checking").notNull(),
+  balance: float("balance").default(0).notNull(),
+  icon: varchar("icon", { length: 10 }).default("🏦").notNull(),
+  color: varchar("color", { length: 20 }).default("#3B82F6").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BankAccount = typeof bankAccounts.$inferSelect;
+export type InsertBankAccount = typeof bankAccounts.$inferInsert;
+
+/**
+ * Shopping List / Wishlist
+ */
+export const shoppingItems = mysqlTable("shopping_items", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 500 }).notNull(),
+  estimatedPrice: float("estimatedPrice"),
+  category: varchar("category", { length: 100 }),
+  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "bought", "cancelled"]).default("pending").notNull(),
+  link: text("link"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShoppingItem = typeof shoppingItems.$inferSelect;
+export type InsertShoppingItem = typeof shoppingItems.$inferInsert;
+
+/**
+ * Budget Rules (spending limits per category)
+ */
+export const budgetRules = mysqlTable("budget_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  monthlyLimit: float("monthlyLimit").notNull(),
+  alertAt: int("alertAt").default(80).notNull(), // percentage to alert
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BudgetRule = typeof budgetRules.$inferSelect;
+export type InsertBudgetRule = typeof budgetRules.$inferInsert;
+
+/**
+ * Finance Notes
+ */
+export const financeNotes = mysqlTable("finance_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  content: text("content"),
+  color: varchar("color", { length: 20 }).default("#FBBF24").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FinanceNote = typeof financeNotes.$inferSelect;
+export type InsertFinanceNote = typeof financeNotes.$inferInsert;
+
+/**
  * Focus Projects
  */
 export const focusProjects = mysqlTable("focus_projects", {

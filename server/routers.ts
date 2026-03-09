@@ -22,6 +22,9 @@ export const appRouter = router({
     get: protectedProcedure.query(async ({ ctx }) => {
       return db.getOrCreateProfile(ctx.user.id);
     }),
+    getUser: protectedProcedure.query(async ({ ctx }) => {
+      return ctx.user;
+    }),
     update: protectedProcedure.input(z.object({
       xp: z.number().optional(),
       coins: z.number().optional(),
@@ -33,6 +36,11 @@ export const appRouter = router({
       energyRating: z.string().optional(),
       humorRating: z.string().optional(),
       focusHoursGoal: z.number().optional(),
+      displayName: z.string().optional(),
+      avatarUrl: z.string().optional(),
+      notifyHabits: z.boolean().optional(),
+      notifyMetas: z.boolean().optional(),
+      notifyCommunity: z.boolean().optional(),
     })).mutation(async ({ ctx, input }) => {
       await db.updateProfile(ctx.user.id, input);
       return db.getOrCreateProfile(ctx.user.id);
@@ -296,6 +304,29 @@ export const appRouter = router({
     clearAll: protectedProcedure.mutation(async ({ ctx }) => {
       await db.clearNotifications(ctx.user.id);
       return { success: true };
+    }),
+  }),
+
+  // ============ ACHIEVEMENTS ============
+  achievements: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserAchievements(ctx.user.id);
+    }),
+    unlock: protectedProcedure.input(z.object({
+      achievementKey: z.string(),
+    })).mutation(async ({ ctx, input }) => {
+      return db.unlockAchievement(ctx.user.id, input.achievementKey);
+    }),
+    featured: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        return db.getFeaturedAchievements(ctx.user.id);
+      }),
+      set: protectedProcedure.input(z.object({
+        slot: z.number().min(1).max(3),
+        achievementKey: z.string().nullable(),
+      })).mutation(async ({ ctx, input }) => {
+        return db.setFeaturedAchievement(ctx.user.id, input.slot, input.achievementKey);
+      }),
     }),
   }),
 

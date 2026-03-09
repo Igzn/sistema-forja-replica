@@ -13,6 +13,7 @@ import Tasks from "./pages/Tasks";
 import Goals from "./pages/Goals";
 import Finance from "./pages/Finance";
 import Focus from "./pages/Focus";
+import Profile from "./pages/Profile";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading, isAuthenticated } = useAuth();
@@ -62,6 +63,7 @@ function Router() {
       <Route path={"/goals"} component={Goals} />
       <Route path={"/finance"} component={Finance} />
       <Route path={"/focus"} component={Focus} />
+      <Route path={"/profile"} component={Profile} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

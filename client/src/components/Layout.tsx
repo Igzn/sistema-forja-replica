@@ -2,6 +2,8 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import FeaturedAchievementsPopup from "./FeaturedAchievementsPopup";
+import ProfileDropdown from "./ProfileDropdown";
 import {
   BarChart3,
   CheckSquare,
@@ -408,12 +410,15 @@ export default function Layout({ children }: LayoutProps) {
           <button onClick={() => setPopup('achievements')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
             <Trophy className="w-4 h-4 text-red-500" />
           </button>
-          <button className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+          <button onClick={() => setPopup('featured')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
             <Medal className="w-4 h-4 text-yellow-400" />
           </button>
-          <button className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
-            <User className="w-4 h-4 text-gray-400" />
-          </button>
+          <div className="relative">
+            <button onClick={() => setPopup(popup === 'profile' ? null : 'profile')} className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg flex items-center justify-center hover:bg-[#2a2a2a] transition">
+              <User className="w-4 h-4 text-gray-400" />
+            </button>
+            {popup === 'profile' && <ProfileDropdown onClose={() => setPopup(null)} />}
+          </div>
         </div>
       </div>
 
@@ -450,6 +455,7 @@ export default function Layout({ children }: LayoutProps) {
       {popup === 'coins' && <CoinsPopup onClose={() => setPopup(null)} />}
       {popup === 'titles' && <TitlesPopup onClose={() => setPopup(null)} />}
       {popup === 'achievements' && <AchievementsPopup onClose={() => setPopup(null)} />}
+      {popup === 'featured' && <FeaturedAchievementsPopup onClose={() => setPopup(null)} />}
       {popup === 'notifications' && <NotificationPanel onClose={() => setPopup(null)} />}
     </div>
   );

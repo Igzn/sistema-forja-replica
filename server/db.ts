@@ -12,6 +12,8 @@ import {
   focusSessions, InsertFocusSession,
   waterLogs, InsertWaterLog,
   notifications, InsertNotification,
+  userAchievements, InsertUserAchievement,
+  featuredAchievements, InsertFeaturedAchievement,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -326,4 +328,52 @@ export async function clearNotifications(userId: number) {
   const db = await getDb();
   if (!db) return;
   await db.delete(notifications).where(eq(notifications.userId, userId));
+}
+
+// ============ USER ACHIEVEMENTS ============
+
+export async function getUserAchievements(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(userAchievements).where(eq(userAchievements.userId, userId)).orderBy(desc(userAchievements.unlockedAt));
+}
+
+export async function unlockAchievement(userId: number, achievementKey: string) {
+  const db = await getDb();
+  if (!db) return null;
+  // Check if already unlocked
+  const existing = await db.select().from(userAchievements).where(
+    and(eq(userAchievements.userId, userId), eq(userAchievements.achievementKey, achievementKey))
+  ).limit(1);
+  if (existing.length > 0) return existing[0];
+  await db.insert(userAchievements).values({ userId, achievementKey });
+  const created = await db.select().from(userAchievements).where(
+    and(eq(userAchievements.userId, userId), eq(userAchievements.achievementKey, achievementKey))
+  ).limit(1);
+  return created[0] ?? null;
+}
+
+// ============ FEATURED ACHIEVEMENTS ============
+
+export async function getFeaturedAchievements(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(featuredAchievements).where(eq(featuredAchievements.userId, userId)).orderBy(featuredAchievements.slot);
+}
+
+export async function setFeaturedAchievement(userId: number, slot: number, achievementKey: string | null) {
+  const db = await getDb();
+  if (!db) return null;
+  const existing = await db.select().from(featuredAchievements).where(
+    and(eq(featuredAchievements.userId, userId), eq(featuredAchievements.slot, slot))
+  ).limit(1);
+  if (existing.length > 0) {
+    await db.update(featuredAchievements).set({ achievementKey }).where(eq(featuredAchievements.id, existing[0].id));
+    return { ...existing[0], achievementKey };
+  }
+  await db.insert(featuredAchievements).values({ userId, slot, achievementKey });
+  const created = await db.select().from(featuredAchievements).where(
+    and(eq(featuredAchievements.userId, userId), eq(featuredAchievements.slot, slot))
+  ).limit(1);
+  return created[0] ?? null;
 }

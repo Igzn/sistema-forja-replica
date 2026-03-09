@@ -61,3 +61,12 @@
 - [x] Criar rota backend para enviar notificações push
 - [x] Implementar pedido de permissão no frontend (botão no app)
 - [x] Agendar notificações automáticas (hábitos, tarefas, água, foco)
+
+## Conquistas em Destaque & Perfil
+- [ ] Popup Conquistas em Destaque (ícone medalha) com 3 slots para exibir no ranking
+- [ ] Dropdown do Perfil (ícone pessoa) com Usuário/email, Perfil, Configurações, Sair
+- [ ] Página de Perfil com foto de perfil, email, nome de exibição, botão Salvar
+- [ ] Seção Segurança com alterar senha (atual, nova, confirmar)
+- [ ] Seção Notificações com toggles (Hábitos, Metas, Comunidade)
+- [ ] Seção Sobre com Últimas Atualizações v2.1.6
+- [ ] Seção Conta com botão Sair da Conta

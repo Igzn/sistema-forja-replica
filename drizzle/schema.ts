@@ -24,6 +24,8 @@ export type InsertUser = typeof users.$inferInsert;
 export const userProfiles = mysqlTable("user_profiles", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  displayName: varchar("displayName", { length: 255 }),
+  avatarUrl: text("avatarUrl"),
   xp: int("xp").default(0).notNull(),
   coins: int("coins").default(0).notNull(),
   level: int("level").default(1).notNull(),
@@ -34,6 +36,9 @@ export const userProfiles = mysqlTable("user_profiles", {
   energyRating: varchar("energyRating", { length: 20 }),
   humorRating: varchar("humorRating", { length: 20 }),
   focusHoursGoal: int("focusHoursGoal").default(40).notNull(),
+  notifyHabits: boolean("notifyHabits").default(true).notNull(),
+  notifyMetas: boolean("notifyMetas").default(true).notNull(),
+  notifyCommunity: boolean("notifyCommunity").default(true).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
@@ -217,3 +222,30 @@ export const pushSubscriptions = mysqlTable("push_subscriptions", {
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+/**
+ * User Achievements
+ */
+export const userAchievements = mysqlTable("user_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  achievementKey: varchar("achievementKey", { length: 100 }).notNull(),
+  unlockedAt: timestamp("unlockedAt").defaultNow().notNull(),
+});
+
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = typeof userAchievements.$inferInsert;
+
+/**
+ * Featured Achievements (3 slots for ranking display)
+ */
+export const featuredAchievements = mysqlTable("featured_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  slot: int("slot").notNull(), // 1, 2, or 3
+  achievementKey: varchar("achievementKey", { length: 100 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FeaturedAchievement = typeof featuredAchievements.$inferSelect;
+export type InsertFeaturedAchievement = typeof featuredAchievements.$inferInsert;

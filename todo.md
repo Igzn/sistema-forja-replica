@@ -70,3 +70,13 @@
 - [x] Seção Notificações com toggles (Hábitos, Metas, Comunidade)
 - [x] Seção Sobre com Últimas Atualizações v2.1.6
 - [x] Seção Conta com botão Sair da Conta
+
+## Correções Fidelidade aos Prints (Conquistas em Destaque)
+- [x] Alterar subtítulo para "Escolha até 3 conquistas para exibir no seu perfil do ranking"
+- [x] Alterar texto dos slots vazios para "Toque para selecionar"
+- [x] Adicionar botão "Salvar Destaques" vermelho na parte inferior do popup
+- [x] Remover barra de progresso 0/21 e info text do popup
+- [x] Mostrar TODAS conquistas na seleção (desbloqueadas + bloqueadas com cadeado)
+- [x] Usar seta voltar em vez de X no título da seleção
+- [x] Remover "- Slot X" do título da seleção (só "Selecionar Conquista")
+- [x] Remover opção "Remover conquista deste slot" da seleção

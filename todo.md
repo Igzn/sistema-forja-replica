@@ -103,3 +103,10 @@
 - [x] Desbloquear tab Alocação: alocação de orçamento
 - [x] Mostrar todos os 12 meses no calendário (atualmente só 6)
 - [x] Backend: rotas CRUD para cards, accounts, shopping, rules, notes
+
+## Melhorias Finanças - Funcionamento Perfeito
+- [x] Conectar Transferências às Contas (atualizar saldo automaticamente)
+- [x] Testar e corrigir bugs em todas as 12 sub-tabs
+- [x] Garantir que modais de criação/edição funcionam em todas as tabs
+- [x] Garantir que exclusão funciona em todas as tabs
+- [x] Verificar estados vazios e loading em todas as tabs

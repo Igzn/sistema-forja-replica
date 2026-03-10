@@ -110,3 +110,7 @@
 - [x] Garantir que modais de criação/edição funcionam em todas as tabs
 - [x] Garantir que exclusão funciona em todas as tabs
 - [x] Verificar estados vazios e loading em todas as tabs
+
+## Correção Bem-estar Dashboard
+- [x] Corrigir botão Sono para abrir seletor funcional (0-12 horas)
+- [x] Corrigir botão Humor para abrir seletor funcional (1-10 escala)

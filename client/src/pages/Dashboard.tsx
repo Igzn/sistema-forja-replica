@@ -30,6 +30,8 @@ export default function Dashboard() {
   const { addNotification } = useNotifications();
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(null);
   const [showWaterSettings, setShowWaterSettings] = useState(false);
+  const [showSleepPicker, setShowSleepPicker] = useState(false);
+  const [showHumorPicker, setShowHumorPicker] = useState(false);
 
   const todayStr = useMemo(() => getTodayStr(), []);
   const weekDates = useMemo(() => getWeekDates(), []);
@@ -165,20 +167,58 @@ export default function Dashboard() {
 
           {/* Tags - Sono, Energia, Humor */}
           <div className="flex gap-3 mb-5">
-            <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg">
-              <span className="text-blue-400">🌙</span>
-              <span className="text-xs text-blue-400">Sono</span>
-              <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.sleepRating || '-'}</span>
+            {/* Sono Picker */}
+            <div className="relative flex-1">
+              <button onClick={() => setShowSleepPicker(!showSleepPicker)} className="w-full flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition">
+                <span className="text-blue-400">🌙</span>
+                <span className="text-xs text-blue-400">Sono</span>
+                <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.sleepRating || '-'}</span>
+              </button>
+              {showSleepPicker && (
+                <div className="absolute top-full mt-2 left-0 bg-[#1a1a1a] border border-blue-500/30 rounded-lg p-2 z-50 w-full">
+                  <div className="grid grid-cols-4 gap-1">
+                    {Array.from({length: 13}, (_, i) => i).map(hours => (
+                      <button key={`sleep-${hours}`} onClick={() => {
+                        profileUpdate.mutate({ sleepRating: String(hours) });
+                        setShowSleepPicker(false);
+                      }} className={`px-2 py-1 rounded text-xs font-medium transition ${
+                        String(hours) === profileQuery.data?.sleepRating ? 'bg-blue-500 text-white' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                      }`}>
+                        {hours}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg">
+            <button onClick={() => toast.info("Energia: Sem dados registrados")} className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg hover:bg-yellow-500/20 transition">
               <span className="text-yellow-400">⚡</span>
               <span className="text-xs text-yellow-400">Energia</span>
               <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.energyRating || '-'}</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg">
-              <span className="text-green-400">😊</span>
-              <span className="text-xs text-green-400">Humor</span>
-              <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.humorRating || '-'}</span>
+            </button>
+            {/* Humor Picker */}
+            <div className="relative flex-1">
+              <button onClick={() => setShowHumorPicker(!showHumorPicker)} className="w-full flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg hover:bg-green-500/20 transition">
+                <span className="text-green-400">😊</span>
+                <span className="text-xs text-green-400">Humor</span>
+                <span className="text-xs text-gray-500 ml-1">{profileQuery.data?.humorRating || '-'}</span>
+              </button>
+              {showHumorPicker && (
+                <div className="absolute top-full mt-2 right-0 bg-[#1a1a1a] border border-green-500/30 rounded-lg p-2 z-50 w-full">
+                  <div className="grid grid-cols-5 gap-1">
+                    {Array.from({length: 10}, (_, i) => i + 1).map(level => (
+                      <button key={`humor-${level}`} onClick={() => {
+                        profileUpdate.mutate({ humorRating: String(level) });
+                        setShowHumorPicker(false);
+                      }} className={`px-2 py-1 rounded text-xs font-medium transition ${
+                        String(level) === profileQuery.data?.humorRating ? 'bg-green-500 text-white' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                      }`}>
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
